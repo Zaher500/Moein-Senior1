@@ -1,5 +1,8 @@
 from pathlib import Path
 import pymysql
+import os
+from dotenv import load_dotenv
+load_dotenv()
 pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -79,6 +82,14 @@ DATABASES = {
     }
 }
 
+# Hugging Face API settings
+HF_API_KEY = os.getenv("HF_API_KEY")
+HF_MODEL = os.getenv("HF_MODEL")
+HF_BASE_URL = os.getenv("HF_BASE_URL")
+
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", 0.3))
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", 500))
+CHAT_HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", 10))
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
