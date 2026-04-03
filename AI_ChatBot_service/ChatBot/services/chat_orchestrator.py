@@ -1,6 +1,9 @@
 from ChatBot.selectors.chat_session_selector import get_student_session_or_404
+from ChatBot.selectors.chat_message_selector import get_llm_ready_history
 from ChatBot.services.chat_message_service import ChatMessageService
 from ChatBot.services.rag_service import RAGService
+from ChatBot.services.prompt_builder import PromptBuilder
+from ChatBot.services.llm_service import LLMService
 # This orchestrator will handle the entire flow of sending a message, including:
     # 1. validate session
     # 2. save user message
@@ -21,13 +24,34 @@ class ChatOrchestrator:
             content=message_text
         )
 
+        # keep RAG placeholder for later
         rag_result = RAGService.retrieve_context(
             student_id=student_id,
             query=message_text,
             session=session
         )
 
-        assistant_text = "This is a placeholder response until RAG + LLM are connected."
+        # get recent history from selector
+        history = get_llm_ready_history(session=session, limit=10)
+
+        # remove current user message from history to avoid duplication
+        history_without_current_message = history[:-1] if history else []
+
+        # build prompt
+        prompt_builder = PromptBuilder()
+        messages = prompt_builder.build_messages(
+            user_message=message_text,
+            chat_history=history_without_current_message,
+            retrieved_context=None,   # later: rag_result
+        )
+
+        # generate AI response
+        llm_service = LLMService()
+        try:
+            assistant_text = llm_service.generate_response(messages=messages)
+        except Exception as e:
+            print("LLM ERROR:", str(e))
+            assistant_text = f"LLM failed: {str(e)}"
 
         assistant_message = ChatMessageService.create_assistant_message(
             session=session,
