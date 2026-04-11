@@ -68,7 +68,7 @@ class VectorStoreService:
                 name="chunk_index",
                 dtype=DataType.INT64,
             ),
-            FieldSchema(
+            FieldSchema( 
                 name="source_type",
                 dtype=DataType.VARCHAR,
                 max_length=32,
@@ -199,3 +199,24 @@ class VectorStoreService:
                 )
 
         return normalized_results
+    
+    def insert_chunks(self, chunks: list[dict]):
+        if not chunks:
+            raise ValueError("Chunks list cannot be empty.")
+
+        collection = Collection(self.collection_name)
+
+        data = [
+            [chunk["chunk_id"] for chunk in chunks],
+            [chunk["embedding"] for chunk in chunks],
+            [chunk["chunk_text"] for chunk in chunks],
+            [chunk["lecture_id"] for chunk in chunks],
+            [chunk["course_id"] for chunk in chunks],
+            [chunk["student_id"] for chunk in chunks],
+            [chunk["chunk_index"] for chunk in chunks],
+            [chunk["source_type"] for chunk in chunks],
+            [chunk["created_at"] for chunk in chunks],
+        ]
+
+        collection.insert(data)
+        collection.flush()

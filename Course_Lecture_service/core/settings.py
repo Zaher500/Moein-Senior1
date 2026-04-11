@@ -9,9 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 SERVICES = {
-    'gateway': 'https://marielle-subchondral-rex.ngrok-free.dev',
-    'account': 'https://asteroidal-rikki-craniologically.ngrok-free.dev',   # Account service
-    'course': 'https://lissom-plainly-cathi.ngrok-free.dev',    # Course service
+    'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
+    'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
+    'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
+    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'http://localhost:8003'),
+    'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
 }
 
 GATEWAY_SECRET = 'AwZKQwAg5nowgvSvSdb4dfPZSC6eM9F_7XH6gokrJEtB93jXEsTJTmYKQGR7xUNn0ns'
@@ -47,6 +49,11 @@ ALLOWED_HOSTS = [
 SUMMARIZATION_SERVICE = {
     'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev/api',
     'timeout': 30
+}
+
+CHATBOT_SERVICE = {
+    "base_url": "http://127.0.0.1:8000/api",
+    "timeout": 30,
 }
 
 

@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from .utils.text_extractor import extract_text_from_file
 from .services.summarization_client import get_summary
 from .services.summarization_client import send_for_summarization, is_summary_ready
+from .services.chatbot_client import send_for_chatbot_ingestion
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -318,8 +319,19 @@ def upload_lecture(request, course_id):
                 {'error': f'Text extraction failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        # 11. Send lecture text to ChatBot service for vector ingestion
+        try:
+            send_for_chatbot_ingestion(
+                lecture_id=lecture.lecture_id,
+                course_id=course.course_id,
+                student_id=student_id,
+                text=extracted_text,
+                source_type="lecture",
+            )
+        except Exception as e:
+            print(f"ChatBot ingestion failed: {e}")
 
-        # 11. Send lecture for summarization
+        # 12. Send lecture for summarization
         try:
             send_for_summarization(lecture.lecture_id, extracted_text)
         except Exception as e:
@@ -331,7 +343,7 @@ def upload_lecture(request, course_id):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         
-        # 12. Return response
+        # 13. Return response
         return Response({
             'message': 'Lecture uploaded successfully',
             'lecture': LectureSerializer(lecture).data,
