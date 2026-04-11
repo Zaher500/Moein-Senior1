@@ -2,7 +2,11 @@ from pathlib import Path
 import pymysql
 import os
 from dotenv import load_dotenv
-load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env", override=True)
+
+print("HF_TOKEN from settings:", os.getenv("HF_TOKEN"))
 pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
