@@ -12,6 +12,7 @@ from .db.mongo import get_summary_by_lecture_id, is_summary_ready
 
 class LectureTextAPIView(APIView):
     def post(self, request):
+        print("Summarization request received")
         serializer = LectureTextSerializer(data=request.data)
 
         if not serializer.is_valid():

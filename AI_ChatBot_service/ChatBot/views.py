@@ -122,6 +122,7 @@ def send_message(request, session_id):
 
 @api_view(["POST"])
 def ingest_lecture(request):
+    print("ChatBot ingestion request received")
     user, student_id = extract_student_id(request)
 
     if not student_id:

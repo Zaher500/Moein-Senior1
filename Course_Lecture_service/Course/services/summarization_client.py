@@ -6,7 +6,7 @@ def send_for_summarization(lecture_id: str, text: str) -> None:
     """
     Fire-and-forget request to summarization service.
     """
-    url = f"{settings.SUMMARIZATION_SERVICE['base_url']}/lecture-text/"
+    url = f"{settings.SERVICES['summarizer']}/lecture-text/"
     payload = {
         'lecture_id': str(lecture_id),
         'text': text
