@@ -6,6 +6,7 @@ from rest_framework import status
 from .jwt_utils import get_student_id_from_token
 from django.views.decorators.http import require_GET
 import mimetypes
+import threading
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from .utils.text_extractor import extract_text_from_file
@@ -319,29 +320,30 @@ def upload_lecture(request, course_id):
                 {'error': f'Text extraction failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        # 11. Send lecture text to ChatBot service for vector ingestion
-        try:
-            send_for_chatbot_ingestion(
-                lecture_id=lecture.lecture_id,
-                course_id=course.course_id,
-                student_id=student_id,
-                text=extracted_text,
-                source_type="lecture",
-            )
-        except Exception as e:
-            print(f"ChatBot ingestion failed: {e}")
+                # 11. Fire-and-forget: send extracted text to ChatBot and Summarization services
+        def send_to_chatbot():
+            try:
+                send_for_chatbot_ingestion(
+                    lecture_id=lecture.lecture_id,
+                    course_id=course.course_id,
+                    student_id=student_id,
+                    text=extracted_text,
+                    source_type="lecture",
+                )
+            except Exception as e:
+                print(f"ChatBot ingestion failed: {e}")
 
-        # 12. Send lecture for summarization
-        try:
-            send_for_summarization(lecture.lecture_id, extracted_text)
-        except Exception as e:
-            lecture.summary_status = 'FAILED'
-            lecture.save(update_fields=['summary_status'])
+        def send_to_summarizer():
+            try:
+                send_for_summarization(lecture.lecture_id, extracted_text)
+            except Exception as e:
+                print(f"Summarization request failed: {e}")
 
-            return Response(
-                {'error': 'Summarization service unavailable'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
+        chatbot_thread = threading.Thread(target=send_to_chatbot, daemon=True)
+        summarizer_thread = threading.Thread(target=send_to_summarizer, daemon=True)
+
+        chatbot_thread.start()
+        summarizer_thread.start()
         
         # 13. Return response
         return Response({
