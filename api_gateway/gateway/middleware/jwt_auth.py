@@ -43,13 +43,23 @@ class JWTAuthMiddleware:
                 return JsonResponse({'error': 'Server JWT not configured'}, status=500)
 
             payload = jwt.decode(token, jwt_secret, algorithms=[jwt_alg])
+            print("JWT payload:", payload)
+            print("student_id from token:", payload.get("student_id"))
+            print("user_id from token:", payload.get("sub") or payload.get("user_id"))
 
             # Common claim names: sub, user_id, student_id, username
             request.user_id = payload.get('sub') or payload.get('user_id') or payload.get('userId') or None
             request.username = payload.get('username') or payload.get('name') or None
 
             # IMPORTANT: if token contains student_id, attach it so router can forward it
-            request.student_id = payload.get('student_id') or payload.get('studentId') or None
+            request.student_id = (
+            payload.get('student_id')
+            or payload.get('studentId')
+            or payload.get('sub')
+            or payload.get('user_id')
+            or payload.get('userId')
+            or None
+        )
 
             return self.get_response(request)
 

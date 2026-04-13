@@ -32,7 +32,7 @@ def get_student_id_from_token(request):
                 headers={
                     'X-GATEWAY-SECRET': 'AwZKQwAg5nowgvSvSdb4dfPZSC6eM9F_7XH6gokrJEtB93jXEsTJTmYKQGR7xUNn0ns'
                 },
-                timeout=10
+                timeout=60
             )
             if response.status_code == 200:
                 student_id = response.json().get('student_id')
