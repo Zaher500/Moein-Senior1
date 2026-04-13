@@ -13,6 +13,8 @@ class RequestRouterMiddleware:
         self.routes = {
             'account': settings.SERVICES['account'].rstrip('/'),
             'course': settings.SERVICES['course'].rstrip('/'),
+            'summarizer': settings.SERVICES['summarizer'].rstrip('/'),
+            'chatbot': settings.SERVICES['chatbot'].rstrip('/'),
         }
 
         # Map URL paths to services — keep specific/longer paths here
@@ -38,6 +40,14 @@ class RequestRouterMiddleware:
             '/api/delete-student-courses/<uuid>/': 'course',
             '/api/summarize': 'summarizer',
             '/api/summarize/': 'summarizer',
+
+            # chatbot-related
+            '/api/chat/test': 'chatbot',
+            '/api/chat/test/': 'chatbot',
+            '/api/chat/sessions': 'chatbot',
+            '/api/chat/sessions/': 'chatbot',
+            '/api/chat/lectures/ingest': 'chatbot',
+            '/api/chat/lectures/ingest/': 'chatbot',
             
         }
 
@@ -96,6 +106,8 @@ class RequestRouterMiddleware:
         username = getattr(request, 'username', None)
         if username:
             headers['X-Username'] = username
+            
+        print("Forwarded headers:", headers)
 
         # Detect content type and forward request accordingly
         content_type = request.META.get('CONTENT_TYPE', '')
@@ -110,7 +122,7 @@ class RequestRouterMiddleware:
                         headers=headers,
                         json=json_data,
                         params=request.GET,
-                        timeout=10,
+                        timeout=60,
                         verify=True
                     )
                 except json.JSONDecodeError:
@@ -120,9 +132,10 @@ class RequestRouterMiddleware:
                         headers=headers,
                         data=request.body,
                         params=request.GET,
-                        timeout=10,
+                        timeout=60,
                         verify=True
                     )
+                    
 
             elif content_type.startswith('multipart/form-data'):
                 response = requests.request(
@@ -132,7 +145,7 @@ class RequestRouterMiddleware:
                     data=request.POST,
                     files=request.FILES,
                     params=request.GET,
-                    timeout=10,
+                    timeout=60,
                     verify=True
                 )
 
@@ -143,7 +156,7 @@ class RequestRouterMiddleware:
                     headers=headers,
                     data=request.body,
                     params=request.GET,
-                    timeout=10,
+                    timeout=60,
                     verify=True
                 )
 

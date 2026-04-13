@@ -4,6 +4,7 @@ from ChatBot.services.chat_message_service import ChatMessageService
 from ChatBot.services.rag_service import RAGService
 from ChatBot.services.prompt_builder import PromptBuilder
 from ChatBot.services.llm_service import LLMService
+
 # This orchestrator will handle the entire flow of sending a message, including:
     # 1. validate session
     # 2. save user message
@@ -24,28 +25,33 @@ class ChatOrchestrator:
             content=message_text
         )
 
-        # keep RAG placeholder for later
         rag_result = RAGService.retrieve_context(
             student_id=student_id,
             query=message_text,
             session=session
         )
+        print("RAG chunks count:", len(rag_result["chunks"]))
+        print("RAG context preview:", rag_result["context_text"][:500])
+        
 
-        # get recent history from selector
         history = get_llm_ready_history(session=session, limit=10)
 
-        # remove current user message from history to avoid duplication
         history_without_current_message = history[:-1] if history else []
 
-        # build prompt
+        retrieved_context = [
+            chunk["chunk_text"]
+            for chunk in rag_result["chunks"]
+            if chunk.get("chunk_text")
+        ]
+
         prompt_builder = PromptBuilder()
         messages = prompt_builder.build_messages(
             user_message=message_text,
             chat_history=history_without_current_message,
-            retrieved_context=None,   # later: rag_result
+            retrieved_context=retrieved_context,
         )
+        print("Final messages:", messages)
 
-        # generate AI response
         llm_service = LLMService()
         try:
             assistant_text = llm_service.generate_response(messages=messages)

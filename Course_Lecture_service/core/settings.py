@@ -48,12 +48,12 @@ ALLOWED_HOSTS = [
 
 SUMMARIZATION_SERVICE = {
     'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev/api',
-    'timeout': 30
+    'timeout': 60
 }
 
 CHATBOT_SERVICE = {
     "base_url": "http://127.0.0.1:8000/api",
-    "timeout": 30,
+    "timeout": 60,
 }
 
 
