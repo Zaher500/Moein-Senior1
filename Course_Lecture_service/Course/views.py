@@ -1,4 +1,7 @@
 import os
+from django.shortcuts import get_object_or_404
+
+from .models import Lecture
 import uuid
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -6,7 +9,7 @@ from rest_framework import status
 from .jwt_utils import get_student_id_from_token
 from django.views.decorators.http import require_GET
 import mimetypes
-from django.http import FileResponse, Http404, HttpResponseForbidden
+from django.http import FileResponse, Http404, HttpResponseForbidden ,JsonResponse
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from .utils.text_extractor import extract_text_from_file
 from .services.summarization_client import get_summary
@@ -672,3 +675,36 @@ def serve_media_file(request, student_id, course_id, filename):
     response['Content-Disposition'] = f'inline; filename="{os.path.basename(filename)}"'
     return response
     
+
+
+def get_lecture_file(request, lecture_id):
+    lecture = get_object_or_404(Lecture, lecture_id=lecture_id)
+
+    if not lecture.file_name:
+        return JsonResponse(
+            {"success": False, "message": "Lecture file is not attached."},
+            status=404,
+        )
+
+    media_root = getattr(settings, "MEDIA_ROOT", None)
+    if not media_root:
+        media_root = os.path.join(settings.BASE_DIR, "media")
+
+    file_path = os.path.join(
+        media_root,
+        str(lecture.student_id),
+        str(lecture.course_id),
+        lecture.file_name,
+    )
+
+    if not os.path.isfile(file_path):
+        return JsonResponse(
+            {"success": False, "message": "Lecture file not found on disk."},
+            status=404,
+        )
+
+    return FileResponse(
+        open(file_path, "rb"),
+        as_attachment=False,
+        filename=lecture.file_name,
+    )

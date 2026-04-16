@@ -84,7 +84,7 @@ JWT_EXP_DELTA_SECONDS = 86400
 
 
 MIDDLEWARE = [
-    'Course.middleware.GatewaySecretMiddleware',
+    # 'Course.middleware.GatewaySecretMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -127,9 +127,9 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Course_Lecture_service',
+        'NAME': 'course_lecture_service',
         'USER': 'root',
-        'PASSWORD': 'Zaher.0968271107',
+        'PASSWORD': 'OD_20752',
         'HOST': 'localhost',
         'PORT': '3306',
     }
