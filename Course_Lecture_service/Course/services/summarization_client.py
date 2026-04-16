@@ -6,7 +6,7 @@ def send_for_summarization(lecture_id: str, text: str) -> None:
     """
     Fire-and-forget request to summarization service.
     """
-    url = f"{settings.SERVICES['summarizer']}/lecture-text/"
+    url = f"{settings.SERVICES['summarizer']}/api/lecture-text/"
     payload = {
         'lecture_id': str(lecture_id),
         'text': text
@@ -21,8 +21,10 @@ def send_for_summarization(lecture_id: str, text: str) -> None:
 def is_summary_ready(lecture_id: str) -> bool:
     """
     Ask summarization service if summary is ready.
+
     """
-    url = f"{settings.SUMMARIZATION_SERVICE['base_url']}/summary/status/{lecture_id}/"
+
+    url = f"{settings.SUMMARIZATION_SERVICE['base_url']}/api/summary/status/{lecture_id}/"
 
     response = requests.get(
         url,
@@ -38,7 +40,7 @@ def get_summary(lecture_id: str) -> dict:
     """
     Fetch summary from summarization service.
     """
-    url = f"{settings.SUMMARIZATION_SERVICE['base_url']}/summary/{lecture_id}/"
+    url = f"{settings.SUMMARIZATION_SERVICE['base_url']}/api/summary/{lecture_id}/"
 
     response = requests.get(
         url,

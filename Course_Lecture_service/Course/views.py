@@ -61,7 +61,7 @@ def get_my_courses(request):
         return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
     
     courses = Course.objects.filter(student_id=student_id)
-    serializer = CourseSerializer(courses, many=True)
+    serializer = CourseSerializer(courses, many=True, context={'request': request})
     return Response({
         'count': courses.count(),
         'courses': serializer.data

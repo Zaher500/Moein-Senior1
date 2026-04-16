@@ -81,8 +81,9 @@ SERVICES = {
     'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
     'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
-    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'http://localhost:8003'),
+    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
+    'stt': os.environ.get('STT_SERVICE_URL', 'http://lissom-plainly-cathi.ngrok-free.dev'),
 }
 
 
@@ -103,6 +104,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://marielle-subchondral-rex.ngrok-free.dev",
+    "http://localhost:5173",
 ]
 
 
@@ -114,6 +116,22 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     'authorization',
     'ngrok-skip-browser-warning',
     "content-type",
+    "accept",
+    "accept-encoding",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    ]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
 ]
 
 LANGUAGE_CODE = 'en-us'

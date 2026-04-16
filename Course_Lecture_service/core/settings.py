@@ -12,7 +12,7 @@ SERVICES = {
     'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
     'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
-    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'http://localhost:8003'),
+    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
 }
 
@@ -47,7 +47,7 @@ ALLOWED_HOSTS = [
 
 
 SUMMARIZATION_SERVICE = {
-    'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev/api',
+    'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev',
     'timeout': 60
 }
 
