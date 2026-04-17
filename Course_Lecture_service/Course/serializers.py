@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Course, Lecture
+from .jwt_utils import get_student_id_from_token
 
 
 class LectureCreateSerializer(serializers.ModelSerializer):
@@ -46,41 +47,36 @@ class LectureSerializer(serializers.ModelSerializer):
 # serializers.py
 class CourseSerializer(serializers.ModelSerializer):
     lectures = serializers.SerializerMethodField()
-    lecture_count = serializers.SerializerMethodField()  # Add this
-    
-    class Meta: 
+    lecture_count = serializers.SerializerMethodField()
+
+    class Meta:
         model = Course
         fields = ['course_id', 'course_name', 'course_teacher', 'lectures', 'lecture_count', 'created_at']
-    
-    def get_lectures(self, obj):
+
+    def get_student_id(self):
         request = self.context.get('request')
-        if request and hasattr(request, 'student_id'):
-            student_id = request.student_id
-            lectures = Lecture.objects.filter(course_id=obj, student_id=student_id)
-            # Return minimal lecture data for course list
-            return [
-                {
-                    'lecture_id': str(lecture.lecture_id),
-                    'lecture_name': lecture.lecture_name,
-                    'has_file': bool(lecture.file_name),
-                    'created_at': lecture.created_at
-                }
-                for lecture in lectures[:3]  # Only show first 3 in course list
-            ]
-        return []
-    
+        if not request:
+            return None
+        return get_student_id_from_token(request)
+
     def get_lecture_count(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(request, 'student_id'):
-            student_id = request.student_id
-            return Lecture.objects.filter(course_id=obj, student_id=student_id).count()
-        return 0
-    
+        student_id = self.get_student_id()
+        if not student_id:
+            return 0
+        return Lecture.objects.filter(course_id=obj, student_id=student_id).count()
+
     def get_lectures(self, obj):
-        # Get current student from request context
-        request = self.context.get('request')
-        if request and hasattr(request, 'student_id'):
-            student_id = request.student_id
-            lectures = Lecture.objects.filter(course_id=obj, student_id=student_id)
-            return LectureSerializer(lectures, many=True).data
-        return []
+        student_id = self.get_student_id()
+        if not student_id:
+            return []
+
+        lectures = Lecture.objects.filter(course_id=obj, student_id=student_id)[:3]
+        return [
+            {
+                'lecture_id': str(lecture.lecture_id),
+                'lecture_name': lecture.lecture_name,
+                'has_file': bool(lecture.file_name),
+                'created_at': lecture.created_at
+            }
+            for lecture in lectures
+        ]

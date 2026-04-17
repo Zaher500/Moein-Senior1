@@ -12,7 +12,7 @@ SERVICES = {
     'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
     'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
-    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'http://localhost:8003'),
+    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
 }
 
@@ -47,7 +47,7 @@ ALLOWED_HOSTS = [
 
 
 SUMMARIZATION_SERVICE = {
-    'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev/api',
+    'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev',
     'timeout': 60
 }
 
@@ -91,7 +91,7 @@ JWT_EXP_DELTA_SECONDS = 86400
 
 
 MIDDLEWARE = [
-    'Course.middleware.GatewaySecretMiddleware',
+    # 'Course.middleware.GatewaySecretMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -134,9 +134,9 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Course_Lecture_service',
+        'NAME': 'course_lecture_service',
         'USER': 'root',
-        'PASSWORD': 'Zaher.0968271107',
+        'PASSWORD': 'OD_20752',
         'HOST': 'localhost',
         'PORT': '3306',
     }
