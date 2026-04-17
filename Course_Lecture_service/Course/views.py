@@ -694,6 +694,13 @@ def serve_media_file(request, student_id, course_id, filename):
     
 
 
+import os
+from django.conf import settings
+from django.http import FileResponse, JsonResponse
+from django.shortcuts import get_object_or_404
+
+from .models import Lecture
+
 def get_lecture_file(request, lecture_id):
     lecture = get_object_or_404(Lecture, lecture_id=lecture_id)
 
@@ -710,7 +717,7 @@ def get_lecture_file(request, lecture_id):
     file_path = os.path.join(
         media_root,
         str(lecture.student_id),
-        str(lecture.course_id),
+        str(lecture.course_id.course_id),
         lecture.file_name,
     )
 

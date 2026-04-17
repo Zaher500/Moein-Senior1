@@ -16,4 +16,5 @@ urlpatterns = [
     path('lectures/<uuid:lecture_id>/file/', views.get_lecture_file, name='get-lecture-file'),
     path('media/<uuid:student_id>/<uuid:course_id>/<path:filename>/', views.serve_media_file, name='serve-media'),
     path('lectures/<uuid:lecture_id>/summary/', views.get_lecture_summary, name='get-lecture-summary'),
+    path('generate/existing/', views.get_lecture_file, name='get-lecture-file'),
 ]

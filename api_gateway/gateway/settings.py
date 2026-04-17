@@ -84,6 +84,7 @@ SERVICES = {
     'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
     'stt': os.environ.get('STT_SERVICE_URL', 'http://lissom-plainly-cathi.ngrok-free.dev'),
+    'quiz': os.environ.get('QUIZ_SERVICE_URL', 'http://localhost:8004'),
 }
 
 

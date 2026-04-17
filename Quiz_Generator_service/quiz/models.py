@@ -15,8 +15,8 @@ class Quiz(models.Model):
     ]
 
     quiz_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    lecture_id = models.UUIDField()
-    course_id = models.UUIDField()
+    lecture_id = models.UUIDField(null=True, blank=True)
+    course_id = models.UUIDField(null=True, blank=True)
     student_id = models.UUIDField()
     title = models.CharField(max_length=255)
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
