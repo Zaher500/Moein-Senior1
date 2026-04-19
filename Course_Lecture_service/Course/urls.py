@@ -13,8 +13,8 @@ urlpatterns = [
     path('delete-student-courses/<uuid:student_id>/', views.delete_student_courses),
     path('courses/<uuid:course_id>/lectures/', views.get_course_lectures, name='get-course-lectures'),
     path('lectures/<uuid:lecture_id>/', views.get_lecture, name='get-lecture'),
-    path('lectures/<uuid:lecture_id>/file/', views.get_lecture_file, name='get-lecture-file'),
     path('media/<uuid:student_id>/<uuid:course_id>/<path:filename>/', views.serve_media_file, name='serve-media'),
     path('lectures/<uuid:lecture_id>/summary/', views.get_lecture_summary, name='get-lecture-summary'),
     path('generate/existing/', views.get_lecture_file, name='get-lecture-file'),
+    path('lectures/<uuid:lecture_id>/file/', views.get_lecture_file, name='get-lecture-file'),
 ]

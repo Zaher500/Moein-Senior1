@@ -78,13 +78,13 @@ JWT_ALGORITHM = 'HS256'
 
 # Service URLs
 SERVICES = {
-    'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
+    'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'), #don't forget to return it to localhost:8000 
     'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
     'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
     'stt': os.environ.get('STT_SERVICE_URL', 'http://lissom-plainly-cathi.ngrok-free.dev'),
-    'quiz': os.environ.get('QUIZ_SERVICE_URL', 'http://localhost:8004'),
+    'quiz': os.environ.get('QUIZ_SERVICE_URL', 'https://unsynchronous-unbewitchingly-kristy.ngrok-free.dev'),
 }
 
 

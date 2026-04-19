@@ -26,6 +26,8 @@ class RequestRouterMiddleware:
             '/api/check-student': 'account',
             '/api/check-user': 'account',
             '/api/me': 'account',
+            '/api/verify-otp/': 'account',
+            '/api/verify-otp': 'account',
 
             '/api/media': 'course',
             '/api/media/': 'course',
@@ -50,6 +52,7 @@ class RequestRouterMiddleware:
             '/stt/upload/': 'stt',
             '/stt/stt-status': 'stt',
             '/stt/stt-status/': 'stt',
+            
             '/api/quiz': 'quiz',
             '/api/quiz/': 'quiz',
         }
