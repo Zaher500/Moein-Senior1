@@ -1,0 +1,80 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+
+# =========================
+# Virtual Environments
+# =========================
+venv/
+env/
+.venv/
+
+# =========================
+# Django
+# =========================
+*.mo
+*.pot
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# IDEs & Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Docker
+# =========================
+*.pid
+docker-data/
+docker-volumes/
+
+# =========================
+# AI / ML Models & Cache
+# =========================
+models/
+checkpoints/
+*.bin
+*.pt
+*.onnx
+.cache/
+huggingface/
+
+# =========================
+# Test & Coverage
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Node (if frontend later)
+# =========================
+node_modules/
+
+
+.dist/

@@ -1,11 +1,9 @@
-# Junior-project-AI-Student-Assistant-Moein
+# Moein - AI Student Assistance
 
-This repository contains the academic project for the current semester.
-The system is designed to assist students by providing the following features:
+## Team Members
+- MHD Zaher Krayem
+- MHD Yahia Abo Samra
+- MHD Awab Kheir
+- Othman Darkal
 
-Uploading lecture materials
-Generating structured summaries
-Creating short quizzes
-Offering chatbot support
-Exporting summaries in PDF format
-The project aims to simplify access to course content and enhance study efficiency through automation and intelligent tools.
+Moein is an AI-powered student assistance system designed to support students through intelligent academic tools. The system integrates structured learning management features with AI capabilities.
