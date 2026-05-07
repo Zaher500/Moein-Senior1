@@ -74,5 +74,5 @@ def mark_job_failed(job_id: str, error_message: str):
 def get_job_by_id(job_id: str, student_id: str):
     return collection.find_one(
         {"job_id": job_id, "student_id": student_id},
-        {"_id": 0}
+        {"_id": 0} 
     )

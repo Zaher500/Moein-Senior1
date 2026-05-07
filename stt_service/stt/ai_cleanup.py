@@ -6,12 +6,12 @@ HF_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 MAX_CHARS_PER_CHUNK = 2500
 
 
-print("⏳ Initializing Hugging Face InferenceClient...")
+print("Initializing Hugging Face InferenceClient...")
 hf_client = InferenceClient(
     model=HF_MODEL,
     token=settings.HF_TOKEN,
 )
-print("✅ Hugging Face InferenceClient initialized")
+print("Hugging Face InferenceClient initialized")
 
 
 def build_cleanup_prompt(raw_text: str) -> str:
@@ -97,10 +97,10 @@ def clean_transcript_with_qwen_client(raw_text: str) -> str:
         error_text = str(e)
 
         if "402" in error_text:
-            print("⚠️ Hugging Face returned 402 Payment Required. Returning raw transcript.")
+            print("Hugging Face returned 402 Payment Required. Returning raw transcript.")
             return raw_text
 
-        print(f"⚠️ Qwen cleanup via InferenceClient failed: {e}")
+        print(f"Qwen cleanup via InferenceClient failed: {e}")
         return raw_text
 
 
@@ -138,7 +138,7 @@ def clean_long_transcript_with_qwen_client(raw_text: str) -> str:
     cleaned_chunks = []
 
     for idx, chunk in enumerate(chunks, start=1):
-        print(f"🧠 Cleaning transcript chunk {idx}/{len(chunks)} with InferenceClient...")
+        print(f"Cleaning transcript chunk {idx}/{len(chunks)} with InferenceClient...")
         cleaned_chunk = clean_transcript_with_qwen_client(chunk)
         cleaned_chunks.append(cleaned_chunk)
 

@@ -57,7 +57,7 @@ def preprocess_audio(local_file_path: str) -> str:
 
     audio = AudioSegment.from_file(local_file_path)
 
-    audio = audio.set_channels(1).set_frame_rate(TARGET_SAMPLE_RATE)
+    audio = audio.set_channels(1).set_frame_rate(TARGET_SAMPLE_RATE) 
     audio = audio.normalize()
     audio = audio.high_pass_filter(HIGH_PASS_HZ)
     audio = audio.low_pass_filter(LOW_PASS_HZ)
@@ -170,7 +170,7 @@ def callback(ch, method, properties, body):
         if user_id:
             safe_send_notification(
                 user_id,
-                "the audio was processing",
+                "the audio is processing",
                 "transcribe"
             )
 
@@ -198,7 +198,7 @@ def callback(ch, method, properties, body):
         if user_id:
             safe_send_notification(
                 user_id,
-                "the audio was completed",
+                "the audio is completed",
                 "transcribe"
             )
 
@@ -215,7 +215,7 @@ def callback(ch, method, properties, body):
         if user_id:
             safe_send_notification(
                 user_id,
-                "the audio was failed",
+                "the audio failed to process",
                 "transcribe"
             )
 
@@ -224,6 +224,7 @@ def callback(ch, method, properties, body):
         print("==========================================")
 
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+        
 # ==============================
 # Start consumer
 # ==============================
