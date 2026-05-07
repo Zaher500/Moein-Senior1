@@ -15,6 +15,7 @@ class RequestRouterMiddleware:
             'chatbot': settings.SERVICES['chatbot'].rstrip('/'),
             'stt': settings.SERVICES['stt'].rstrip('/'),
             'quiz': settings.SERVICES['quiz'].rstrip('/'),
+            'notification': settings.SERVICES['notification'].rstrip('/'),
         }
 
         self.path_mapping = {
@@ -38,8 +39,8 @@ class RequestRouterMiddleware:
             '/api/generate/existing/': 'course',
             '/api/generate/existing': 'course',
 
-            '/api/summarize': 'summarizer',
-            '/api/summarize/': 'summarizer',
+            # '/api/summarize': 'summarizer',
+            # '/api/summarize/': 'summarizer',
 
             '/api/chat/test': 'chatbot',
             '/api/chat/test/': 'chatbot',
@@ -52,9 +53,14 @@ class RequestRouterMiddleware:
             '/stt/upload/': 'stt',
             '/stt/stt-status': 'stt',
             '/stt/stt-status/': 'stt',
-            
+
             '/api/quiz': 'quiz',
             '/api/quiz/': 'quiz',
+
+            '/api/notifications/': 'notification',
+            '/api/notifications': 'notification',
+            '/notifications/': 'notification',
+            '/notifications': 'notification',
         }
 
     def __call__(self, request):
@@ -90,15 +96,14 @@ class RequestRouterMiddleware:
 
         path = request.get_full_path()
 
-        # Rewrite only quiz routes:
         if path.startswith('/api/quiz/'):
             path = path.replace('/api/quiz/', '/quiz/', 1)
         elif path == '/api/quiz':
             path = '/quiz'
 
         target_url = urllib.parse.urljoin(
-        service_url + '/',
-        path.lstrip('/')
+            service_url + '/',
+            path.lstrip('/')
         )
 
         print(f"[Gateway] Forward target URL: {target_url}")

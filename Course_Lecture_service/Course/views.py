@@ -341,7 +341,9 @@ def upload_lecture(request, course_id):
 
         def send_to_summarizer():
             try:
-                send_for_summarization(lecture.lecture_id, extracted_text)
+                print("AUTH:", request.headers.get("Authorization"))
+                print("X-STUDENT-ID:", request.headers.get("X-Student-ID"))
+                send_for_summarization(lecture.lecture_id, extracted_text, request=request)
             except Exception as e:
                 print(f"Summarization request failed: {e}")
 

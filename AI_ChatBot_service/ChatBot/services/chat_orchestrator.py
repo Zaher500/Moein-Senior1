@@ -5,16 +5,6 @@ from ChatBot.services.rag_service import RAGService
 from ChatBot.services.prompt_builder import PromptBuilder
 from ChatBot.services.llm_service import LLMService
 
-# This orchestrator will handle the entire flow of sending a message, including:
-    # 1. validate session
-    # 2. save user message
-    # 3. get history
-    # 4. retrieve context (RAG)
-    # 5. build prompt
-    # 6. call LLM
-    # 7. save assistant message
-    # 8. return result
-
 class ChatOrchestrator:
     @staticmethod
     def send_message(student_id, session_id, message_text):

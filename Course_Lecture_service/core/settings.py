@@ -12,7 +12,7 @@ SERVICES = {
     'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
     'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
-    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
+    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://asteroidal-rikki-craniologically.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
 }
 
@@ -40,14 +40,14 @@ CSRF_TRUSTED_ORIGINS = [
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    ".ngrok-free.app",    # ← Wildcard for ngrok-free.app domains
-    ".ngrok.io",          # ← Wildcard for ngrok.io domains
-    ".ngrok-free.dev",    # ← Wildcard for ngrok-free.dev domains
+    ".ngrok-free.app",    
+    ".ngrok.io",          
+    ".ngrok-free.dev",    
 ]
 
 
 SUMMARIZATION_SERVICE = {
-    'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev',
+    'base_url': 'https://asteroidal-rikki-craniologically.ngrok-free.dev',
     'timeout': 60
 }
 

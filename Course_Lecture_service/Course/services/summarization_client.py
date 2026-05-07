@@ -2,21 +2,33 @@ import requests
 from django.conf import settings
 
 
-def send_for_summarization(lecture_id: str, text: str) -> None:
-    """
-    Fire-and-forget request to summarization service.
-    """
+def send_for_summarization(lecture_id: str, text: str, request) -> None:
     url = f"{settings.SERVICES['summarizer']}/api/lecture-text/"
+
     payload = {
-        'lecture_id': str(lecture_id),
-        'text': text
+        "lecture_id": str(lecture_id),
+        "text": text,
     }
 
-    requests.post(
+    headers = {
+    "Authorization": request.headers.get("Authorization"),
+    "X-Student-ID": request.headers.get("X-Student-ID"),
+    "X-User-ID": request.headers.get("X-User-ID"),
+    "Content-Type": "application/json",
+}
+
+    print("OUTGOING HEADERS:", headers)
+
+    response = requests.post(
         url,
         json=payload,
-        timeout=settings.SUMMARIZATION_SERVICE['timeout']
+        headers=headers,   
+        timeout=settings.SUMMARIZATION_SERVICE["timeout"]
     )
+
+    print("STATUS:", response.status_code, response.text)
+    response.raise_for_status()
+    
 
 def is_summary_ready(lecture_id: str) -> bool:
     """
@@ -31,6 +43,7 @@ def is_summary_ready(lecture_id: str) -> bool:
         timeout=settings.SUMMARIZATION_SERVICE['timeout']
     )
 
+    print("STATUS:", response.status_code, response.text)
     response.raise_for_status()
 
     data = response.json()

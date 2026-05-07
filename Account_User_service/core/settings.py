@@ -11,8 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SERVICES = {
     'gateway': 'https://marielle-subchondral-rex.ngrok-free.dev',
-    'account': 'https://asteroidal-rikki-craniologically.ngrok-free.dev',   # Account service
-    'course': 'https://lissom-plainly-cathi.ngrok-free.dev',    # Course service
+    'account': 'http://localhost:8000',   
+    'course': 'http://localhost:8001',    
 }
 
 GATEWAY_SECRET = 'AwZKQwAg5nowgvSvSdb4dfPZSC6eM9F_7XH6gokrJEtB93jXEsTJTmYKQGR7xUNn0ns'

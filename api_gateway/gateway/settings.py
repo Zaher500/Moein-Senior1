@@ -9,7 +9,7 @@ GATEWAY_SECRET = 'AwZKQwAg5nowgvSvSdb4dfPZSC6eM9F_7XH6gokrJEtB93jXEsTJTmYKQGR7xU
 
 SECRET_KEY = 'django-insecure-gateway-key-simple-123'
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 
 DEBUG = True
@@ -65,31 +65,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gateway.wsgi.application'
 
-# No database needed for gateway
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy',
     }
 }
 
-# JWT Settings (MUST match your services)
+
 JWT_SECRET = 'AwZKQwAg5nowgvSvSdb4dfPZSC6eM9F_7XH6gokrJEtB93jXEsTJTmYKQGR7xUNn0ns'
 JWT_ALGORITHM = 'HS256'
 
-# Service URLs
+
 SERVICES = {
-    'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'), #don't forget to return it to localhost:8000 
+    # 'account': os.environ.get('ACCOUNT_SERVICE_URL', 'https://clover-quotable-unvalued.ngrok-free.dev'),
+    'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
     'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
-    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
+    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://asteroidal-rikki-craniologically.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
-    'stt': os.environ.get('STT_SERVICE_URL', 'http://lissom-plainly-cathi.ngrok-free.dev'),
+    'notification': os.environ.get('NOTIFICATION_SERVICE_URL', 'https://lissom-plainly-cathi.ngrok-free.dev'),
     'quiz': os.environ.get('QUIZ_SERVICE_URL', 'https://unsynchronous-unbewitchingly-kristy.ngrok-free.dev'),
+    'stt': os.environ.get('STT_SERVICE_URL', 'https://pang-veal-quilt.ngrok-free.dev'),
 }
 
 
 
-# Public endpoints (no auth required)
 PUBLIC_ENDPOINTS = [
     '/api/signup/',
     '/api/login/',
