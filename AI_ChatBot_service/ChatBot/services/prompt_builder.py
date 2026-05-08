@@ -1,4 +1,4 @@
-class PromptBuilder:
+class PromptBuilder:            #   (SYSTEM_PROMPT يعني دمج برومت الطالب مع البرمت) LLM هو بظبط ل برومت يلي بيبعتها لل 
     SYSTEM_PROMPT = (
         "You are Moein, an AI academic student assistant. "
         "Help students understand topics clearly and accurately. "
@@ -9,12 +9,12 @@ class PromptBuilder:
         "Do not invent facts or make unsupported claims."
     )
 
-    def build_messages(self, user_message, chat_history=None, retrieved_context=None):
-        messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT}
+    def build_messages(self, user_message, chat_history=None, retrieved_context=None):   #zz10  هون عم نبني لبرومت وعم ضكن بالبرومت ال
+        messages = [                                                                       # system prompt and user query (prompt) and chunks form vector db  
+            {"role": "system", "content": self.SYSTEM_PROMPT}                              #  وكمان العشر رسائل يلي بسطر 36 تبع الاوركستريتر 
         ]
 
-        if retrieved_context:
+        if retrieved_context:    # كيف الرد بدو يكون للطالب 
             context_text = "\n\n".join(retrieved_context)
             messages.append({
                 "role": "system",
@@ -32,4 +32,4 @@ class PromptBuilder:
 
         messages.append({"role": "user", "content": user_message})
 
-        return messages
+        return messages       # لبرومت نفسها

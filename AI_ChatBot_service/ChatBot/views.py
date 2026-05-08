@@ -95,7 +95,7 @@ def get_chat_session(request, session_id):
     }, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
+@api_view(["POST"])       # Z1
 def send_message(request, session_id):
     user, student_id = extract_student_id(request)
 

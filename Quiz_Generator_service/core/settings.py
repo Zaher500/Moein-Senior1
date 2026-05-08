@@ -8,7 +8,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dummy-key')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        'ALLOWED_HOSTS',
+        'localhost,127.0.0.1,.ngrok-free.dev'
+    ).split(',')
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -67,6 +73,19 @@ DATABASES = {
 # MongoDB configuration
 MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
 MONGO_DB = os.getenv('MONGO_DB', 'quiz_results')
+
+# Hugging Face / external services
+HF_TOKEN = os.getenv('HF_TOKEN', '')
+HF_MODEL = os.getenv('HF_MODEL', '')
+HF_BASE_URL = os.getenv('HF_BASE_URL', '')
+COURSE_SERVICE_URL = os.getenv('COURSE_SERVICE_URL', '')
+
+# RabbitMQ configuration
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", 5672))
+RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "guest")
+RABBITMQ_QUEUE = os.getenv("RABBITMQ_QUEUE", "quiz_generation")
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",

@@ -1,6 +1,7 @@
-import time
-import uuid
-from typing import Dict, List
+import time #  بيستلم النص المستخرج من الكورس سيرفس ... بيعمل تحقق للداتا يلي بيحتاجها
+import uuid  # lecture id course id student id 
+from typing import Dict, List #lecture_ingestion_service  وبهدين هاد  vector بقسم النص يلي اجاه لشانكس بعدسين بيبعتهم  لل ايمبدينغ مودل و بيرجعلنا ال
+                             # يعمل اتصال ويخزن بالميلفس vector_store_service بيبعت طلب لل 
 
 from ChatBot.services.embedding_service import EmbeddingService
 from ChatBot.services.vector_store_service import VectorStoreService

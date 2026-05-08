@@ -142,10 +142,10 @@ class VectorStoreService:
         collection.insert(data)
         collection.flush()
 
-    def search_chunks(
-        self,
+    def search_chunks(     #zz6
+        self,                        # query_embedding  المرتبطين chunks  بدي جيب ال 
         query_embedding: list[float],
-        limit: int = 5,
+        limit: int = 5,    # سطر 172 س خمست شانكات وبرجهم للراغ سيؤفس
         student_id: str | None = None,
         course_id: str | None = None,
         lecture_id: str | None = None,
@@ -161,16 +161,16 @@ class VectorStoreService:
             filters.append(f'lecture_id == "{lecture_id}"')
 
         expr = " and ".join(filters) if filters else None
-
-        results = collection.search(
+        #zz6
+        results = collection.search(      # عن طريق سطر196   embedding يلي انعمله  user query  يلي مشابهين لل  chunks عم ناخذ عال 
             data=[query_embedding],
             anns_field="embedding",
             param={
-                "metric_type": self.METRIC_TYPE,
+                "metric_type": self.METRIC_TYPE, #cos similarty 
                 "params": {},
             },
-            limit=limit,
-            expr=expr,
+            limit=limit,    #zz6   من هون لل  183 عم حط قيود لعملية البحث  # انه الشانك يلي بده يجيبهم هاد الكوديل يكونوا خاصين بهاد الطالب
+            expr=expr,       
             output_fields=[
                 "chunk_text",
                 "lecture_id",
@@ -180,7 +180,7 @@ class VectorStoreService:
                 "student_id",
             ],
         )
-
+  
         normalized_results = []
 
         for hits in results:

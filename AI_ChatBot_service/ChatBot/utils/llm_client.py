@@ -15,11 +15,11 @@ class LLMClient:
             token=self.api_key
         )
 
-    def chat_completion(self, messages, temperature=None, max_tokens=None):
+    def chat_completion(self, messages, temperature=None, max_tokens=None):  #zz13  لسطر 23 عم يبعت للمودل
         response = self.client.chat.completions.create(
             messages=messages,
             temperature=temperature or settings.LLM_TEMPERATURE,
             max_tokens=max_tokens or settings.LLM_MAX_TOKENS,
         )
 
-        return response.choices[0].message.content
+        return response.choices[0].message.content    # zz13 يلي عم يجينا من المودل response ال

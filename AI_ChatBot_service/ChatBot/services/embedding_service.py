@@ -1,4 +1,4 @@
-import os
+import os #  embedding : convert text to vector ... bgm3: convert text to embdding 
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
@@ -7,7 +7,7 @@ from typing import List
 
 
 
-class EmbeddingService:
+class EmbeddingService:   #ZZ4
     MODEL_NAME = "BAAI/bge-m3"
     EXPECTED_DIMENSION = 1024
 
@@ -23,7 +23,7 @@ class EmbeddingService:
         return cls._model
 
     @classmethod
-    def embed_text(cls, text: str) -> List[float]:
+    def embed_text(cls, text: str) -> List[float]:       # عم يعمل امبدنغ  وبيرجع الاستجابة للراغ سيرفس
         if not text or not text.strip():
             raise ValueError("Text for embedding cannot be empty.")
 
@@ -35,7 +35,7 @@ class EmbeddingService:
         ).tolist()
 
         cls._validate_embedding_dimension(embedding)
-        return embedding
+        return embedding                         #  وبيرجع الاستجابة للراغ سيرف هلق منروح عالراغ
 
     @classmethod
     def embed_texts(cls, texts: List[str]) -> List[List[float]]:

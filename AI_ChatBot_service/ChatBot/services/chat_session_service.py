@@ -1,4 +1,4 @@
-from ChatBot.models import ChatSession
+from ChatBot.models import ChatSession   # بانشا جلسة
 
 
 class ChatSessionService:

@@ -13,6 +13,7 @@ from .services.file_extractor import extract_text_from_file
 from .services.course_client import fetch_lecture_file
 from .services.quiz_generator import generate_quiz
 from .services.mongo_store import store_llm_response
+from .rabbitmq_client import publish_quiz_job
 
 
 def build_response(success, message, data=None, status_code=200):
@@ -55,6 +56,16 @@ def _validate_file(file_obj):
         return build_response(False, 'Uploaded file is empty', status_code=400)
 
     return None
+
+
+def is_scope_in_text(scope, text):
+    if not scope or not text:
+        return False
+
+    normalized_scope = " ".join(str(scope).strip().lower().split())
+    normalized_text = " ".join(str(text).strip().lower().split())
+
+    return normalized_scope in normalized_text
 
 
 def _process_quiz_generation(request, source_type, text, num_questions, lecture_id, course_id, title, scope=None, question_mode='mixed'):
@@ -130,6 +141,120 @@ def _process_quiz_generation(request, source_type, text, num_questions, lecture_
             status_code=500
         )
 
+
+def _create_pending_quiz_and_publish(
+    request,
+    source_type,
+    *,
+    lecture_id=None,
+    course_id=None,
+    title='Generated Quiz',
+    num_questions=5,
+    question_mode='mixed',
+    scope=None,
+    text=None,
+    original_filename=None,
+):
+    student_id = request.headers.get('X-Student-ID')
+    if not student_id:
+        return build_response(False, 'X-Student-ID header is required', status_code=401)
+
+    try:
+        quiz = Quiz.objects.create(
+            student_id=student_id,
+            lecture_id=lecture_id,
+            course_id=course_id,
+            title=title,
+            source=source_type,
+            status='PENDING',
+            num_questions=num_questions,
+        )
+    except Exception as e:
+        return build_response(False, f'Failed to create pending quiz: {str(e)}', status_code=500)
+
+    payload = {
+        'quiz_id': str(quiz.quiz_id),
+        'student_id': str(student_id),
+        'lecture_id': str(lecture_id) if lecture_id else None,
+        'course_id': str(course_id) if course_id else None,
+        'title': title,
+        'source_type': source_type,
+        'num_questions': num_questions,
+        'question_mode': question_mode,
+    }
+
+    if scope:
+        payload['scope'] = scope
+
+    if text:
+        payload['text'] = text
+
+    if original_filename:
+        payload['original_filename'] = original_filename
+
+    try:
+        publish_quiz_job(payload)
+    except Exception as e:
+        quiz.status = 'FAILED'
+        quiz.save(update_fields=['status'])
+        return build_response(False, f'Failed to queue quiz generation: {str(e)}', status_code=500)
+
+    return build_response(
+        True,
+        'Quiz generation started successfully',
+        data={
+            'quiz_id': str(quiz.quiz_id),
+            'status': quiz.status,
+        },
+        status_code=202
+    )
+
+
+@api_view(['POST'])
+def generate_from_existing_view(request):
+    lecture_id = request.data.get('lecture_id')
+    course_id = request.data.get('course_id')
+    num_questions = request.data.get('num_questions', 5)
+    title = request.data.get('title', 'Generated Quiz')
+    question_mode = request.data.get('question_mode', 'mixed')
+
+    if question_mode not in ['mcq', 'true_false', 'mixed']:
+        return build_response(False, 'question_mode must be mcq, true_false, or mixed', status_code=400)
+
+    if not all([lecture_id, course_id]):
+        return build_response(False, 'lecture_id and course_id are required fields', status_code=400)
+
+    error = _validate_uuid(lecture_id, 'lecture_id')
+    if error:
+        return error
+
+    error = _validate_uuid(course_id, 'course_id')
+    if error:
+        return error
+
+    num_questions, error_response = _validate_num_questions(num_questions)
+    if error_response:
+        return error_response
+
+    try:
+        file_obj, filename = fetch_lecture_file(request, lecture_id)
+        text = extract_text_from_file(file_obj, filename)
+    except Exception as e:
+        return build_response(False, str(e), status_code=500)
+
+    return _create_pending_quiz_and_publish(
+        request=request,
+        source_type='EXISTING',
+        lecture_id=lecture_id,
+        course_id=course_id,
+        title=title,
+        num_questions=num_questions,
+        question_mode=question_mode,
+        text=text,
+        original_filename=filename,
+    )
+
+
 @api_view(['POST'])
 def generate_from_file_view(request):
     file_obj = request.FILES.get('file')
@@ -168,65 +293,17 @@ def generate_from_file_view(request):
     except Exception as e:
         return build_response(False, f'File extraction failed: {str(e)}', status_code=500)
 
-    return _process_quiz_generation(
-        request,
-        'FILE',
-        text,
-        num_questions,
-        lecture_id,
-        course_id,
-        title,
-        question_mode=question_mode
+    return _create_pending_quiz_and_publish(
+        request=request,
+        source_type='FILE',
+        lecture_id=lecture_id,
+        course_id=course_id,
+        title=title,
+        num_questions=num_questions,
+        question_mode=question_mode,
+        text=text,
+        original_filename=file_obj.name,
     )
-
-
-@api_view(['POST'])
-def generate_from_existing_view(request):
-    lecture_id = request.data.get('lecture_id')
-    course_id = request.data.get('course_id')
-    num_questions = request.data.get('num_questions', 5)
-    title = request.data.get('title', 'Generated Quiz')
-    question_mode = request.data.get('question_mode', 'mixed')
-    
-    if question_mode not in ['mcq', 'true_false', 'mixed']:
-        return build_response(False, 'question_mode must be mcq, true_false, or mixed', status_code=400)
-
-    if not all([lecture_id, course_id]):
-        return build_response(False, 'lecture_id and course_id are required fields', status_code=400)
-
-    error = _validate_uuid(lecture_id, 'lecture_id')
-    if error:
-        return error
-
-    error = _validate_uuid(course_id, 'course_id')
-    if error:
-        return error
-
-    num_questions, error_response = _validate_num_questions(num_questions)
-    if error_response:
-        return error_response
-
-    try:
-        file_obj, filename = fetch_lecture_file(request, lecture_id)
-        text = extract_text_from_file(file_obj, filename)
-    except Exception as e:
-        return build_response(False, str(e), status_code=500)
-
-    return _process_quiz_generation(
-        request, 'EXISTING', text, num_questions, lecture_id, course_id, title, question_mode=question_mode
-    )
-
-
-def is_scope_in_text(scope, text):
-    scope_words = [w.strip().lower() for w in scope.split() if len(w.strip()) > 2]
-    text_lower = text.lower()
-
-    if not scope_words:
-        return False
-
-    matches = sum(1 for word in scope_words if word in text_lower)
-
-    return (matches / len(scope_words)) >= 0.5
 
 
 @api_view(['POST'])
@@ -237,7 +314,7 @@ def generate_from_scope_view(request):
     title = request.data.get('title', 'Generated Quiz')
     scope = request.data.get('scope')
     question_mode = request.data.get('question_mode', 'mixed')
-    
+
     if question_mode not in ['mcq', 'true_false', 'mixed']:
         return build_response(False, 'question_mode must be mcq, true_false, or mixed', status_code=400)
 
@@ -277,7 +354,7 @@ def generate_from_scope_view(request):
         )
 
     try:
-        file_obj.seek(0)  # Reset file pointer to beginning
+        file_obj.seek(0)
         text = extract_text_from_file(file_obj, filename)
     except Exception as e:
         return build_response(
@@ -285,23 +362,25 @@ def generate_from_scope_view(request):
             f'File extraction failed: {str(e)}',
             status_code=500
         )
+
     if not is_scope_in_text(scope, text):
         return build_response(
-                False,
-                'The requested scope is not covered in the lecture text',
-                status_code=400
-            )
+            False,
+            'The requested scope is not covered in the lecture text',
+            status_code=400
+        )
 
-    return _process_quiz_generation(
-        request,
-        'SCOPE',
-        text,
-        num_questions,
-        lecture_id,
-        course_id,
-        title,
+    return _create_pending_quiz_and_publish(
+        request=request,
+        source_type='SCOPE',
+        lecture_id=lecture_id,
+        course_id=course_id,
+        title=title,
+        num_questions=num_questions,
+        question_mode=question_mode,
         scope=scope,
-        question_mode=question_mode
+        text=text,
+        original_filename=filename,
     )
 
 
@@ -317,7 +396,6 @@ def quiz_detail_view(request, quiz_id):
         serializer = QuizSerializer(quiz)
         return build_response(True, "Quiz fetched successfully", serializer.data, status_code=200)
 
-    # DELETE method
     try:
         mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
         mongo_db_name = os.getenv('MONGO_DB', 'quiz_results')
