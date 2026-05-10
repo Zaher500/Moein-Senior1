@@ -1,16 +1,14 @@
 from django.shortcuts import render
 
-# Create your views here.
 from django.core.mail import send_mail
 from django.conf import settings
 
-#from AI_ChatBot_service.ChatBot.utils.user_headers import get_user_from_headers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import SendOTPSerializer
-from .utils import send_email_otp  #AR
+from .utils import send_email_otp  
 
 class SendOTPEmailAPIView(APIView):
     authentication_classes = []
@@ -69,17 +67,17 @@ class UserNotificationsAPIView(APIView):
         user = get_user_from_headers(request)
 
         if not user:
-            print("❌ No user from headers")
+            print("No user from headers")
             return Response({"error": "Unauthorized"}, status=401)
 
         user_id = user["user_id"]
 
-        print("👉 User from JWT (header):", user_id)
-        print("👉 All keys in notifications_store:", list(notifications_store.keys()))
+        print("User from JWT (header):", user_id)
+        print("All keys in notifications_store:", list(notifications_store.keys()))
 
         user_notifications = notifications_store.get(user_id, [])
 
-        print("👉 Notifications found:", user_notifications)
+        print("Notifications found:", user_notifications)
         print("================================")
 
         return Response(user_notifications)
@@ -102,7 +100,6 @@ class MarkNotificationReadAPIView(APIView):
     
 
 
-#AYO  مشان اختبار بوستمان بس
 import pika
 import json
 
@@ -143,16 +140,16 @@ def get_user_notifications(request):
     user = get_user_from_headers(request)
 
     if not user:
-        print("❌ No user from headers")
+        print("No user from headers")
         return Response({"error": "Unauthorized"}, status=401)
     
     user_id = user["user_id"]
-    print("👉 User from JWT (header):", user_id)
+    print("User from JWT (header):", user_id)
 
-    print("👉 All keys in notifications_store:", list(notifications_store.keys()))
+    print("All keys in notifications_store:", list(notifications_store.keys()))
 
     user_notifications = notifications_store.get(user_id, [])
-    print("👉 Notifications found:", user_notifications)
+    print("Notifications found:", user_notifications)
 
     print("================================")
     return Response(user_notifications)

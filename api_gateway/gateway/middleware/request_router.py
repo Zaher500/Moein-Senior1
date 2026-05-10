@@ -9,20 +9,14 @@ class RequestRouterMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-        # Map service names to URLs (use settings.SERVICES)
         self.routes = {
             'account': settings.SERVICES['account'].rstrip('/'),
             'course': settings.SERVICES['course'].rstrip('/'),
             'summarizer': settings.SERVICES['summarizer'].rstrip('/'),
-            'chatbot': settings.SERVICES['chatbot'].rstrip('/'),
-
-            # ✅ الحل هنا
-            #'notifications': settings.SERVICES['notifications'].rstrip('/'),
+            'chatbot': settings.SERVICES['chatbot'].rstrip('/'),            
         }
 
-        # Map URL paths to services — keep specific/longer paths here
         self.path_mapping = {
-            # account-related
             '/api/signup': 'account',
             '/api/login': 'account',
             '/api/delete': 'account',
@@ -36,9 +30,7 @@ class RequestRouterMiddleware:
             '/api/verify-otp': 'account',
             '/api/verify-otp/': 'account',
 
-            #"/api/notifications/": "http://127.0.0.1:8005/api/notifications/",    #AYO
-            '/api/notifications/': 'notifications',            #AYO
-            # course-related (make sure media is included)
+            '/api/notifications/': 'notifications',           
             '/api/media': 'course',
             '/api/media/': 'course',
 
@@ -50,7 +42,6 @@ class RequestRouterMiddleware:
             '/api/summarize': 'summarizer',
             '/api/summarize/': 'summarizer',
 
-            # chatbot-related
             '/api/chat/test': 'chatbot',
             '/api/chat/test/': 'chatbot',
             '/api/chat/sessions': 'chatbot',
@@ -60,22 +51,18 @@ class RequestRouterMiddleware:
             
         }
 
-        # debug: show route map at startup
         print("[Gateway DEBUG] route map:", self.routes)
         print("[Gateway DEBUG] path mapping keys:", list(self.path_mapping.keys()))
 
     def __call__(self, request):
-        # Determine which service this request is for
         service_name = None
 
-        # Important: match longest prefixes first so '/api/media/...' matches before '/api/'
         for path_prefix in sorted(self.path_mapping.keys(), key=len, reverse=True):
             if request.path.startswith(path_prefix):
                 service_name = self.path_mapping[path_prefix]
                 break
 
         if not service_name:
-            # Not a proxied path — hand to Django as usual
             return self.get_response(request)
 
         service_url = self.routes.get(service_name)

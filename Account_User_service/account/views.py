@@ -156,7 +156,7 @@ def delete_account(request):
         # 3) Get student's UUID
         try:
             student = Student.objects.get(user_id=user)
-            student_id = str(student.student_id)   # <-- UUID
+            student_id = str(student.student_id)  
         except Student.DoesNotExist:
             return Response({'error': 'Student profile not found'}, status=404)
 
@@ -171,16 +171,16 @@ def delete_account(request):
         }
 
         try:
-            print("➡️ Sending DELETE to Course MS:", delete_url)
+            print("Sending DELETE to Course MS:", delete_url)
             resp = requests.delete(delete_url, headers=headers, timeout=10)
 
-            print("➡️ Course delete response status:", resp.status_code)
-            print("➡️ Course delete response text:", resp.text)
+            print("Course delete response status:", resp.status_code)
+            print("Course delete response text:", resp.text)
 
             courses_deleted = (resp.status_code == 200)
 
         except Exception as e:
-            print(f"⚠️ Failed to delete courses from Course MS: {e}")
+            print(f"Failed to delete courses from Course MS: {e}")
 
         username = user.username
         user.delete()  

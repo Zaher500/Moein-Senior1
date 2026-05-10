@@ -21,5 +21,5 @@ channel.basic_publish(
     body=json.dumps(message)
 )
 
-print("✅ Sent to CloudAMQP")
+print("Sent to CloudAMQP")
 connection.close()

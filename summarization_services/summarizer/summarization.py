@@ -2,9 +2,7 @@ from huggingface_hub import InferenceClient
 import os
 
 
-# =========================================================
-# Hugging Face Client
-# =========================================================
+
 
 HF_API_KEY = os.getenv("HF_API_KEY")
 
@@ -17,9 +15,6 @@ client = InferenceClient(
 )
 
 
-# =========================================================
-# Prompt Template
-# =========================================================
 
 PROMPT_TEMPLATE = """
 You are an expert academic assistant.
@@ -44,9 +39,6 @@ Lecture text:
 """
 
 
-# =========================================================
-# Summarization Function (CHAT API)
-# =========================================================
 
 def summarize_text(text: str, max_new_tokens: int = 450) -> str:
     """
@@ -91,6 +83,5 @@ def summarize_text(text: str, max_new_tokens: int = 450) -> str:
         return response.choices[0].message.content.strip()
 
     except Exception as e:
-        # Important: do NOT crash the consumer
-        print("❌ Hugging Face summarization error:", str(e))
+        print("Hugging Face summarization error:", str(e))
         return ""

@@ -15,7 +15,7 @@ def publish_otp(email, otp):
         message = {
         "email": email,
         "otp": otp,
-        "retry_count": 0   # 🔥 جديد
+        "retry_count": 0  
         }
 
         channel.basic_publish(
@@ -24,9 +24,9 @@ def publish_otp(email, otp):
             body=json.dumps(message)
         )
 
-        print("✅ OTP sent to RabbitMQ")
+        print("OTP sent to RabbitMQ")
 
         connection.close()
 
     except Exception as e:
-        print("❌ RabbitMQ Error:", str(e))
+        print("RabbitMQ Error:", str(e))
