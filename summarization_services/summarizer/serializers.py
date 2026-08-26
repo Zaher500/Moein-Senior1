@@ -20,7 +20,6 @@ class LectureTextSerializer(serializers.Serializer):
         return super().to_internal_value(data)
 
 
-# للقراءة فقط
 class SummaryTextSerializer(serializers.ModelSerializer):
     class Meta:
         model = Summary

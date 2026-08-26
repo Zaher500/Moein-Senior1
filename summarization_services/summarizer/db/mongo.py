@@ -8,13 +8,13 @@ MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = "summarization_service"
 COLLECTION_NAME = "summaries"
 
-# IMPORTANT: client must be MongoClient
+#  client must be MongoClient
 client = MongoClient(MONGO_URI)
 
-# IMPORTANT: db must be a Database object, not string
+# db must be a Database object, not string
 db = client[DB_NAME]
 
-# IMPORTANT: this must be a Collection object
+#  this must be a Collection object
 summaries_collection = db[COLLECTION_NAME]
 
 def save_summary(lecture_id: str, summary_text: str):
