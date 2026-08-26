@@ -180,12 +180,21 @@ class RequestRouterMiddleware:
                     )
 
             elif content_type.startswith('multipart/form-data'):
+                files = {}
+
+                for key, uploaded_file in request.FILES.items():
+                    files[key] = (
+                        uploaded_file.name,
+                        uploaded_file.file,
+                        uploaded_file.content_type
+                    )
+
                 response = requests.request(
                     method=request.method,
                     url=target_url,
                     headers=headers,
-                    data=request.POST,
-                    files=request.FILES,
+                    data=request.POST.dict(),
+                    files=files,
                     params=request.GET,
                     timeout=60,
                     verify=True
