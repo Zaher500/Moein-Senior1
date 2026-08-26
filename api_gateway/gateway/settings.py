@@ -84,7 +84,7 @@ SERVICES = {
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
     'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://asteroidal-rikki-craniologically.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
-    'notifications': os.environ.get('NOTIFICATION_SERVICE_URL', 'http://localhost:8005'),  #AYO
+    'notification': os.environ.get('NOTIFICATION_SERVICE_URL', 'http://localhost:8005'),  #AYO
     'quiz': os.environ.get('QUIZ_SERVICE_URL', 'https://unsynchronous-unbewitchingly-kristy.ngrok-free.dev'),
     'stt': os.environ.get('STT_SERVICE_URL', 'https://pang-veal-quilt.ngrok-free.dev'),
 

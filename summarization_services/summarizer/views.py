@@ -16,7 +16,7 @@ class LectureTextAPIView(APIView):
         serializer = LectureTextSerializer(data=request.data)
 
         if not serializer.is_valid():
-            print("Validation errors:", serializer.errors)
+            print("❌ Validation errors:", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         lecture_id = serializer.validated_data["lecture_id"]
@@ -24,7 +24,7 @@ class LectureTextAPIView(APIView):
 
         text = text.replace('\x00', '').strip()
 
-        print("Cleaned text preview:", text[:200])
+        print("✅ Cleaned text preview:", text[:200])
 
         send_to_queue({
             "lecture_id": lecture_id,

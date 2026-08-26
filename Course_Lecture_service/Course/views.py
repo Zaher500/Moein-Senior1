@@ -303,7 +303,7 @@ def upload_lecture(request, course_id):
         # 8. Get lecture name
         lecture_name = serializer.validated_data['lecture_name']
 
-        # 9. CREATE LECTURE IMMEDIATELY 
+        # 9. CREATE LECTURE IMMEDIATELY ✅
         lecture = Lecture.objects.create(
             student_id=student_id,
             course_id=course,
@@ -463,20 +463,20 @@ def delete_lecture(request, course_id, lecture_id):
             try:
                 os.remove(file_path)
                 file_deleted = True
-                print(f"Deleted file: {file_path}")
+                print(f"✅ Deleted file: {file_path}")
                 
                 # Delete folder if empty
                 folder_path = os.path.join(settings.MEDIA_ROOT, str(student_id), str(course_id))
                 if os.path.exists(folder_path) and not os.listdir(folder_path):
                     os.rmdir(folder_path)
                     folder_deleted = True
-                    print(f"Deleted empty folder: {folder_path}")
+                    print(f"✅ Deleted empty folder: {folder_path}")
             except Exception as e:
-                print(f"Failed to delete file/folder: {e}")
+                print(f"⚠️ Failed to delete file/folder: {e}")
         else:
-            print(f"File not found: {file_path}")
+            print(f"⚠️ File not found: {file_path}")
     else:
-        print(f"Lecture has no file_name stored: {lecture.lecture_id}")
+        print(f"⚠️ Lecture has no file_name stored: {lecture.lecture_id}")
     
     # 5. Delete the lecture record from the database
     lecture_name = lecture.lecture_name
@@ -495,7 +495,7 @@ def delete_lecture(request, course_id, lecture_id):
 @api_view(['DELETE'])
 def delete_student_courses(request, student_id):
     """Simple endpoint to delete all courses for a student"""
-    print("DELETE STUDENT COURSES CALLED FOR:", student_id)
+    print("🔥 DELETE STUDENT COURSES CALLED FOR:", student_id)
     try:
         Course.objects.filter(student_id=student_id).delete()
         

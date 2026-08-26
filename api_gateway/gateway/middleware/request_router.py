@@ -33,8 +33,6 @@ class RequestRouterMiddleware:
             '/api/verify-otp': 'account',
             '/api/verify-otp/': 'account',
 
-            '/api/notifications/': 'notification',           
-
             '/api/media': 'course',
             '/api/media/': 'course',
             '/api/courses': 'course',
