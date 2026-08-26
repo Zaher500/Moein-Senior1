@@ -1,0 +1,10 @@
+Django
+pytest
+pytest-django
+pika
+pymongo
+numpy
+noisereduce
+pydub
+faster-whisper
+huggingface_hub
