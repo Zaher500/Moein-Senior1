@@ -27,8 +27,11 @@ class RequestRouterMiddleware:
             '/api/check-student': 'account',
             '/api/check-user': 'account',
             '/api/me': 'account',
-            '/api/verify-otp/': 'account',
+
+            '/api/register-initiate': 'account',
+            '/api/register-initiate/': 'account',
             '/api/verify-otp': 'account',
+            '/api/verify-otp/': 'account',
 
             '/api/media': 'course',
             '/api/media/': 'course',

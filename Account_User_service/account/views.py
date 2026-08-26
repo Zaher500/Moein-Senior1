@@ -1,3 +1,11 @@
+from django.utils import timezone   #A
+from datetime import timedelta   #A
+from django.contrib.auth.hashers import make_password   #A  
+
+from .models import PendingRegistration    #A
+from .services import generate_otp, send_otp   #A
+from django.contrib.auth.hashers import check_password  #A
+from django.db import transaction           #A
 import requests
 from rest_framework import status, exceptions
 from rest_framework.decorators import api_view, permission_classes
@@ -148,7 +156,7 @@ def delete_account(request):
         # 3) Get student's UUID
         try:
             student = Student.objects.get(user_id=user)
-            student_id = str(student.student_id)   # <-- UUID
+            student_id = str(student.student_id)  
         except Student.DoesNotExist:
             return Response({'error': 'Student profile not found'}, status=404)
 
@@ -163,16 +171,16 @@ def delete_account(request):
         }
 
         try:
-            print("➡️ Sending DELETE to Course MS:", delete_url)
+            print("Sending DELETE to Course MS:", delete_url)
             resp = requests.delete(delete_url, headers=headers, timeout=10)
 
-            print("➡️ Course delete response status:", resp.status_code)
-            print("➡️ Course delete response text:", resp.text)
+            print("Course delete response status:", resp.status_code)
+            print("Course delete response text:", resp.text)
 
             courses_deleted = (resp.status_code == 200)
 
         except Exception as e:
-            print(f"⚠️ Failed to delete courses from Course MS: {e}")
+            print(f"Failed to delete courses from Course MS: {e}")
 
         username = user.username
         user.delete()  
@@ -316,3 +324,128 @@ def check_user_exists(request, user_id):
     except Student.DoesNotExist:
         return Response({'exists': False}, status=404)
 
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_initiate(request):
+    
+    print("Received registration initiation request with data:", request.data)
+    serializer = UserSignupSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+
+    data = serializer.validated_data
+
+    username = data['username']
+    email = data['email']
+    password = data['password']
+    phone = data['phone']
+
+   
+    otp = generate_otp()
+    otp_hash = make_password(otp) 
+    
+    password_hash = make_password(password)
+
+    expires_at = timezone.now() + timedelta(minutes=10)
+
+    # Save or update pending registration
+    PendingRegistration.objects.update_or_create(
+        email=email,
+        defaults={
+            "username": username,
+            "password": password_hash,
+            "otp_hash": otp_hash,
+            "otp_expires_at": expires_at,
+            "phone": phone,   
+        }
+    )
+
+    # Send OTP via Notification Service
+    try:
+        send_otp(email, otp, username)
+    except Exception as e:
+        return Response(
+            {"error": "Failed to send OTP", "details": str(e)},
+            status=500
+        )
+
+    return Response({
+        "message": "OTP sent successfully",
+        "email": email
+    }, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@transaction.atomic
+def verify_otp(request):
+    
+    email = request.data.get("email")
+    otp = request.data.get("otp")
+
+    if not email or not otp:
+        return Response({"error": "Email and OTP are required"}, status=400)
+
+    try:
+        pending = PendingRegistration.objects.get(email=email)
+    except PendingRegistration.DoesNotExist:
+        return Response({"error": "No pending registration found"}, status=404)
+
+    # Check expiration
+    if pending.is_expired():
+        return Response(
+            {"error": "OTP expired. Please request a new one"},
+            status=400
+        )
+
+    # Check attempts
+    if pending.otp_attempts >= 5:
+        return Response(
+            {"error": "Too many attempts. Please request a new OTP"},
+            status=400
+        )
+
+    # Check OTP 
+    if not check_password(otp, pending.otp_hash):
+        pending.otp_attempts += 1
+        pending.save()
+        return Response({"error": "Invalid OTP"}, status=400)
+    
+
+    signup_data = {
+        "username": pending.username,
+        "email": pending.email,
+        "password": pending.password,
+        "password_confirm": pending.password,  
+        "phone": pending.phone
+    }
+
+    serializer = UserSignupSerializer(data=signup_data)
+
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+
+    user = serializer.save()
+    
+    user.password = pending.password
+    user.save()
+
+   
+    pending.delete()
+
+    
+    student = Student.objects.get(user_id=user)
+
+    return Response({
+        "message": "Account created successfully",
+        "user": {
+            "user_id": str(user.user_id),
+            "username": user.username,
+            "email": user.email
+        },
+        "student": {
+            "student_id": str(student.student_id)
+        }
+    }, status=201)

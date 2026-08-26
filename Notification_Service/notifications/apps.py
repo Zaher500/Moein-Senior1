@@ -1,0 +1,21 @@
+import os
+import threading
+from django.apps import AppConfig
+
+
+class NotificationsConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'notifications'
+
+    def ready(self):
+        if os.environ.get('RUN_MAIN') != 'true':
+            return
+
+        from .notification_consumer import start_notifications_consumer
+        from .rabbitmq_consumer import start_consuming
+
+        
+        threading.Thread(target=start_notifications_consumer, daemon=True).start()
+
+        
+        threading.Thread(target=start_consuming, daemon=True).start()

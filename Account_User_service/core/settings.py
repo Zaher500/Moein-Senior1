@@ -30,6 +30,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 ALLOWED_HOSTS = [
+    '*',
     "localhost",
     "127.0.0.1",
     ".ngrok-free.app",    # ← Wildcard for ngrok-free.app domains
@@ -118,7 +119,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'Account_User_service',
         'USER': 'root',
-        'PASSWORD': 'Zaher.0968271107',
+        'PASSWORD': '123456789',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -165,3 +166,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#A
+NOTIFICATION_SERVICE_URL = "http://127.0.0.1:8005/api/notifications/send-otp/"
