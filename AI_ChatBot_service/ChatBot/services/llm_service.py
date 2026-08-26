@@ -10,5 +10,5 @@ class LLMService:
             response = self.client.chat_completion(messages=messages)
             return response.strip()
         except Exception as e:
-            # You can log this later
+
             raise Exception(f"LLMService error: {str(e)}")

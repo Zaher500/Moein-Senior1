@@ -11,7 +11,7 @@ def get_llm_ready_history(session, limit: int = 10):
         .order_by("-created_at")[:limit]
     )
 
-    # reverse to oldest → newest
+    
     messages = list(messages)[::-1]
 
     return [

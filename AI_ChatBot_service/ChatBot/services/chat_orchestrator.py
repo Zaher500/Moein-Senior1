@@ -5,24 +5,21 @@ from ChatBot.services.rag_service import RAGService
 from ChatBot.services.prompt_builder import PromptBuilder
 from ChatBot.services.llm_service import LLMService
 
+
 class ChatOrchestrator:
     @staticmethod
     def send_message(student_id, session_id, message_text):
         session = get_student_session_or_404(session_id, student_id)
 
         user_message = ChatMessageService.create_user_message(
-            session=session,
-            content=message_text
+            session=session, content=message_text
         )
 
         rag_result = RAGService.retrieve_context(
-            student_id=student_id,
-            query=message_text,
-            session=session
+            student_id=student_id, query=message_text, session=session
         )
         print("RAG chunks count:", len(rag_result["chunks"]))
         print("RAG context preview:", rag_result["context_text"][:500])
-        
 
         history = get_llm_ready_history(session=session, limit=10)
 
@@ -50,8 +47,7 @@ class ChatOrchestrator:
             assistant_text = f"LLM failed: {str(e)}"
 
         assistant_message = ChatMessageService.create_assistant_message(
-            session=session,
-            content=assistant_text
+            session=session, content=assistant_text
         )
 
         return {
