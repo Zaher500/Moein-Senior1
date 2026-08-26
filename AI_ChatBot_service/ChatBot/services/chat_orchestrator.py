@@ -5,15 +5,6 @@ from ChatBot.services.rag_service import RAGService
 from ChatBot.services.prompt_builder import PromptBuilder
 from ChatBot.services.llm_service import LLMService
 
-# This orchestrator will handle the entire flow of sending a message, including:
-    # 1. validate session
-    # 2. save user message
-    # 3. get history
-    # 4. retrieve context (RAG)
-    # 5. build prompt
-    # 6. call LLM
-    # 7. save assistant message
-    # 8. return result
 
 class ChatOrchestrator:
     @staticmethod
@@ -21,18 +12,14 @@ class ChatOrchestrator:
         session = get_student_session_or_404(session_id, student_id)
 
         user_message = ChatMessageService.create_user_message(
-            session=session,
-            content=message_text
+            session=session, content=message_text
         )
 
         rag_result = RAGService.retrieve_context(
-            student_id=student_id,
-            query=message_text,
-            session=session
+            student_id=student_id, query=message_text, session=session
         )
         print("RAG chunks count:", len(rag_result["chunks"]))
         print("RAG context preview:", rag_result["context_text"][:500])
-        
 
         history = get_llm_ready_history(session=session, limit=10)
 
@@ -60,8 +47,7 @@ class ChatOrchestrator:
             assistant_text = f"LLM failed: {str(e)}"
 
         assistant_message = ChatMessageService.create_assistant_message(
-            session=session,
-            content=assistant_text
+            session=session, content=assistant_text
         )
 
         return {

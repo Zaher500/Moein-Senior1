@@ -81,7 +81,7 @@ def login(request):
         user = serializer.validated_data['user']
         
         # Generate JWT token
-        token = create_jwt_for_user(user)
+        token = create_jwt_for_user(user, student=Student.objects.get(user_id=user))
         
         
         # Get student profile

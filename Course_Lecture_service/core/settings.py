@@ -12,7 +12,7 @@ SERVICES = {
     'account': os.environ.get('ACCOUNT_SERVICE_URL', 'http://localhost:8000'),
     'course': os.environ.get('COURSE_SERVICE_URL', 'http://localhost:8001'),
     'gateway': os.environ.get('GATEWAY_URL', 'https://marielle-subchondral-rex.ngrok-free.dev'),
-    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'http://localhost:8003'),
+    'summarizer': os.environ.get('SUMMARIZER_SERVICE_URL', 'https://asteroidal-rikki-craniologically.ngrok-free.dev'),
     'chatbot': os.environ.get('CHATBOT_SERVICE_URL', 'http://localhost:8004'),
 }
 
@@ -40,14 +40,14 @@ CSRF_TRUSTED_ORIGINS = [
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    ".ngrok-free.app",    # ← Wildcard for ngrok-free.app domains
-    ".ngrok.io",          # ← Wildcard for ngrok.io domains
-    ".ngrok-free.dev",    # ← Wildcard for ngrok-free.dev domains
+    ".ngrok-free.app",    
+    ".ngrok.io",          
+    ".ngrok-free.dev",    
 ]
 
 
 SUMMARIZATION_SERVICE = {
-    'base_url': 'https://lissom-plainly-cathi.ngrok-free.dev/api',
+    'base_url': 'https://asteroidal-rikki-craniologically.ngrok-free.dev',
     'timeout': 60
 }
 
@@ -91,7 +91,7 @@ JWT_EXP_DELTA_SECONDS = 86400
 
 
 MIDDLEWARE = [
-    'Course.middleware.GatewaySecretMiddleware',
+    # 'Course.middleware.GatewaySecretMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -134,7 +134,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Course_Lecture_service',
+        'NAME': 'course_lecture_service',
         'USER': 'root',
         'PASSWORD': 'Zaher.0968271107',
         'HOST': 'localhost',
