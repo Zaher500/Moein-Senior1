@@ -13,13 +13,8 @@ from quiz.services.mongo_store import store_llm_response
 def normalize_options(options):
     if options is None:
         return ""
-
     if isinstance(options, list):
-        return " | ".join(
-            str(opt).strip()
-            for opt in options
-        )
-
+        return " | ".join(str(opt).strip() for opt in options)
     return str(options)
 
 
@@ -41,141 +36,65 @@ class Command(BaseCommand):
         )
 
         channel = connection.channel()
-
         channel.queue_declare(
             queue=settings.RABBITMQ_QUEUE,
             durable=True
         )
+        channel.basic_qos(prefetch_count=1)
 
-        channel.basic_qos(
-            prefetch_count=1
-        )
+        self.stdout.write(self.style.SUCCESS("Quiz worker is running..."))
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                "Quiz worker is running..."
-            )
-        )
-
-        def callback(
-            ch,
-            method,
-            properties,
-            body
-        ):
+        def callback(ch, method, properties, body):
             payload = json.loads(body)
 
             quiz_id = payload.get("quiz_id")
             lecture_id = payload.get("lecture_id")
             student_id = payload.get("student_id")
             text = payload.get("text")
-
-            num_questions = payload.get(
-                "num_questions",
-                5
-            )
-
+            num_questions = payload.get("num_questions", 5)
             scope = payload.get("scope")
-
-            question_mode = payload.get(
-                "question_mode",
-                "mixed"
-            )
-
-            payload_difficulty = payload.get(
-                "difficulty"
-            )
+            question_mode = payload.get("question_mode", "mixed")
 
             quiz = None
 
             try:
-                quiz = Quiz.objects.get(
-                    quiz_id=quiz_id
-                )
-
-                # The DB value is used as a fallback
-                # for older RabbitMQ messages that do not
-                # contain the difficulty field.
-                difficulty = (
-                    payload_difficulty
-                    if payload_difficulty is not None
-                    else quiz.difficulty
-                )
-
+                quiz = Quiz.objects.get(quiz_id=quiz_id)
                 quiz.status = "PROCESSING"
                 quiz.error = None
-
-                quiz.save(
-                    update_fields=[
-                        "status",
-                        "error"
-                    ]
-                )
+                quiz.save(update_fields=["status", "error"])
 
                 if not text:
-                    raise Exception(
-                        "No text found in RabbitMQ payload"
-                    )
-
-                self.stdout.write(
-                    f"Processing quiz {quiz_id} "
-                    f"with difficulty {difficulty}/5"
-                )
+                    raise Exception("No text found in RabbitMQ payload")
 
                 raw_response, valid_questions = generate_quiz(
                     text=text,
                     num_questions=num_questions,
                     scope=scope,
-                    question_mode=question_mode,
-                    difficulty=difficulty,
+                    question_mode=question_mode
                 )
 
                 with transaction.atomic():
                     quiz.questions.all().delete()
 
-                    for i, q_data in enumerate(
-                        valid_questions,
-                        start=1
-                    ):
+                    for i, q_data in enumerate(valid_questions, start=1):
                         Question.objects.create(
                             quiz=quiz,
-                            question_type=q_data.get(
-                                "question_type"
-                            ),
-                            question_text=q_data.get(
-                                "question_text"
-                            ),
-                            options=normalize_options(
-                                q_data.get("options")
-                            ),
-                            correct_answer=q_data.get(
-                                "correct_answer"
-                            ),
-                            explanation=q_data.get(
-                                "explanation",
-                                ""
-                            ),
+                            question_type=q_data.get("question_type"),
+                            question_text=q_data.get("question_text"),
+                            options=normalize_options(q_data.get("options")),
+                            correct_answer=q_data.get("correct_answer"),
+                            explanation=q_data.get("explanation", ""),
                             order=i
                         )
 
                     if valid_questions:
                         quiz.status = "READY"
                         quiz.error = None
-
                     else:
                         quiz.status = "FAILED"
-                        quiz.error = (
-                            "LLM failed to generate valid "
-                            "questions matching the "
-                            "requested schema."
-                        )
+                        quiz.error = "LLM failed to generate valid questions matching the requested schema."
 
-                    quiz.save(
-                        update_fields=[
-                            "status",
-                            "error"
-                        ]
-                    )
+                    quiz.save(update_fields=["status", "error"])
 
                 try:
                     store_llm_response(
@@ -185,40 +104,20 @@ class Command(BaseCommand):
                         raw_response=raw_response,
                         parsed_questions=valid_questions
                     )
-
                 except Exception:
                     pass
 
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"Quiz {quiz_id} processed "
-                        f"successfully at difficulty "
-                        f"{difficulty}/5"
-                    )
-                )
+                self.stdout.write(self.style.SUCCESS(f"Quiz {quiz_id} processed successfully"))
 
             except Exception as e:
                 if quiz:
                     quiz.status = "FAILED"
                     quiz.error = str(e)
+                    quiz.save(update_fields=["status", "error"])
 
-                    quiz.save(
-                        update_fields=[
-                            "status",
-                            "error"
-                        ]
-                    )
+                self.stdout.write(self.style.ERROR(f"Quiz {quiz_id} failed: {str(e)}"))
 
-                self.stdout.write(
-                    self.style.ERROR(
-                        f"Quiz {quiz_id} failed: "
-                        f"{str(e)}"
-                    )
-                )
-
-            ch.basic_ack(
-                delivery_tag=method.delivery_tag
-            )
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
         channel.basic_consume(
             queue=settings.RABBITMQ_QUEUE,

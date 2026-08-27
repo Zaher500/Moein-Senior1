@@ -23,7 +23,6 @@ class Quiz(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     error = models.TextField(null=True, blank=True)
     num_questions = models.IntegerField()
-    difficulty = models.PositiveSmallIntegerField(default=3)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

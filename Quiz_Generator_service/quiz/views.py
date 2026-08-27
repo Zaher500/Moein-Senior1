@@ -13,7 +13,6 @@ from .services.file_extractor import extract_text_from_file
 from .services.course_client import fetch_lecture_file
 from .services.quiz_generator import generate_quiz
 from .services.mongo_store import store_llm_response
-from .services.difficulty_engine import get_next_difficulty
 from .rabbitmq_client import publish_quiz_job
 
 
@@ -32,11 +31,7 @@ def _validate_num_questions(num_questions):
             raise ValueError
         return num_questions, None
     except (TypeError, ValueError):
-        return None, build_response(
-            False,
-            'num_questions must be a positive integer',
-            status_code=400
-        )
+        return None, build_response(False, 'num_questions must be a positive integer', status_code=400)
 
 
 def _validate_uuid(value, field_name):
@@ -44,86 +39,41 @@ def _validate_uuid(value, field_name):
         uuid.UUID(str(value))
         return None
     except (ValueError, TypeError):
-        return build_response(
-            False,
-            f'{field_name} must be a valid UUID',
-            status_code=400
-        )
+        return build_response(False, f'{field_name} must be a valid UUID', status_code=400)
 
 
 def _validate_file(file_obj):
     if not file_obj:
-        return build_response(
-            False,
-            'File is required',
-            status_code=400
-        )
+        return build_response(False, 'File is required', status_code=400)
 
     allowed_extensions = ['.pdf', '.docx']
     filename = file_obj.name.lower()
 
     if not any(filename.endswith(ext) for ext in allowed_extensions):
-        return build_response(
-            False,
-            'Only PDF and DOCX files are allowed',
-            status_code=400
-        )
+        return build_response(False, 'Only PDF and DOCX files are allowed', status_code=400)
 
     if file_obj.size == 0:
-        return build_response(
-            False,
-            'Uploaded file is empty',
-            status_code=400
-        )
+        return build_response(False, 'Uploaded file is empty', status_code=400)
 
     return None
 
 
 def is_scope_in_text(scope, text):
-    scope_words = [
-        w.strip().lower()
-        for w in scope.split()
-        if len(w.strip()) > 2
-    ]
-
+    scope_words = [w.strip().lower() for w in scope.split() if len(w.strip()) > 2]
     text_lower = text.lower()
 
     if not scope_words:
         return False
 
-    matches = sum(
-        1 for word in scope_words
-        if word in text_lower
-    )
+    matches = sum(1 for word in scope_words if word in text_lower)
 
     return (matches / len(scope_words)) >= 0.5
 
 
-def _process_quiz_generation(
-    request,
-    source_type,
-    text,
-    num_questions,
-    lecture_id,
-    course_id,
-    title,
-    scope=None,
-    question_mode='mixed'
-):
+def _process_quiz_generation(request, source_type, text, num_questions, lecture_id, course_id, title, scope=None, question_mode='mixed'):
     student_id = request.headers.get('X-Student-ID')
-
     if not student_id:
-        return build_response(
-            False,
-            'X-Student-ID header is missing',
-            status_code=400
-        )
-
-    difficulty = get_next_difficulty(
-        student_id=student_id,
-        lecture_id=lecture_id,
-        course_id=course_id,
-    )
+        return build_response(False, 'X-Student-ID header is missing', status_code=400)
 
     quiz = Quiz.objects.create(
         lecture_id=lecture_id,
@@ -132,18 +82,11 @@ def _process_quiz_generation(
         title=title,
         source=source_type,
         status='PROCESSING',
-        num_questions=num_questions,
-        difficulty=difficulty,
+        num_questions=num_questions
     )
 
     try:
-        raw_response, valid_questions = generate_quiz(
-           text=text,
-           num_questions=num_questions,
-           scope=scope,
-           question_mode=question_mode,
-           difficulty=difficulty,
-        )
+        raw_response, valid_questions = generate_quiz(text, num_questions, scope, question_mode)
 
         with transaction.atomic():
             for i, q_data in enumerate(valid_questions, start=1):
@@ -162,10 +105,7 @@ def _process_quiz_generation(
                 quiz.error = None
             else:
                 quiz.status = 'FAILED'
-                quiz.error = (
-                    "LLM failed to generate valid questions "
-                    "matching the requested schema."
-                )
+                quiz.error = "LLM failed to generate valid questions matching the requested schema."
 
             quiz.save()
 
@@ -186,7 +126,6 @@ def _process_quiz_generation(
             {
                 "quiz_id": quiz.quiz_id,
                 "status": quiz.status,
-                "difficulty": quiz.difficulty,
                 "generated_count": len(valid_questions)
             },
             status_code=201
@@ -200,9 +139,7 @@ def _process_quiz_generation(
         return build_response(
             False,
             "Quiz generation failed",
-            {
-                "error": str(e)
-            },
+            {"error": str(e)},
             status_code=500
         )
 
@@ -221,21 +158,8 @@ def _create_pending_quiz_and_publish(
     original_filename=None,
 ):
     student_id = request.headers.get('X-Student-ID')
-
     if not student_id:
-        return build_response(
-            False,
-            'X-Student-ID header is required',
-            status_code=401
-        )
-
-    # Determine the difficulty of the new quiz
-    # from the student's latest attempt in the same lecture/course.
-    difficulty = get_next_difficulty(
-        student_id=student_id,
-        lecture_id=lecture_id,
-        course_id=course_id,
-    )
+        return build_response(False, 'X-Student-ID header is required', status_code=401)
 
     try:
         quiz = Quiz.objects.create(
@@ -246,14 +170,9 @@ def _create_pending_quiz_and_publish(
             source=source_type,
             status='PENDING',
             num_questions=num_questions,
-            difficulty=difficulty,
         )
     except Exception as e:
-        return build_response(
-            False,
-            f'Failed to create pending quiz: {str(e)}',
-            status_code=500
-        )
+        return build_response(False, f'Failed to create pending quiz: {str(e)}', status_code=500)
 
     payload = {
         'quiz_id': str(quiz.quiz_id),
@@ -264,7 +183,6 @@ def _create_pending_quiz_and_publish(
         'source_type': source_type,
         'num_questions': num_questions,
         'question_mode': question_mode,
-        'difficulty': difficulty,
     }
 
     if scope:
@@ -278,16 +196,10 @@ def _create_pending_quiz_and_publish(
 
     try:
         publish_quiz_job(payload)
-
     except Exception as e:
         quiz.status = 'FAILED'
         quiz.save(update_fields=['status'])
-
-        return build_response(
-            False,
-            f'Failed to queue quiz generation: {str(e)}',
-            status_code=500
-        )
+        return build_response(False, f'Failed to queue quiz generation: {str(e)}', status_code=500)
 
     return build_response(
         True,
@@ -295,7 +207,6 @@ def _create_pending_quiz_and_publish(
         data={
             'quiz_id': str(quiz.quiz_id),
             'status': quiz.status,
-            'difficulty': quiz.difficulty,
         },
         status_code=202
     )
@@ -310,18 +221,10 @@ def generate_from_existing_view(request):
     question_mode = request.data.get('question_mode', 'mixed')
 
     if question_mode not in ['mcq', 'true_false', 'mixed']:
-        return build_response(
-            False,
-            'question_mode must be mcq, true_false, or mixed',
-            status_code=400
-        )
+        return build_response(False, 'question_mode must be mcq, true_false, or mixed', status_code=400)
 
     if not all([lecture_id, course_id]):
-        return build_response(
-            False,
-            'lecture_id and course_id are required fields',
-            status_code=400
-        )
+        return build_response(False, 'lecture_id and course_id are required fields', status_code=400)
 
     error = _validate_uuid(lecture_id, 'lecture_id')
     if error:
@@ -331,30 +234,15 @@ def generate_from_existing_view(request):
     if error:
         return error
 
-    num_questions, error_response = _validate_num_questions(
-        num_questions
-    )
-
+    num_questions, error_response = _validate_num_questions(num_questions)
     if error_response:
         return error_response
 
     try:
-        file_obj, filename = fetch_lecture_file(
-            request,
-            lecture_id
-        )
-
-        text = extract_text_from_file(
-            file_obj,
-            filename
-        )
-
+        file_obj, filename = fetch_lecture_file(request, lecture_id)
+        text = extract_text_from_file(file_obj, filename)
     except Exception as e:
-        return build_response(
-            False,
-            str(e),
-            status_code=500
-        )
+        return build_response(False, str(e), status_code=500)
 
     return _create_pending_quiz_and_publish(
         request=request,
@@ -372,81 +260,40 @@ def generate_from_existing_view(request):
 @api_view(['POST'])
 def generate_from_file_view(request):
     file_obj = request.FILES.get('file')
-
     lecture_id = request.data.get('lecture_id') or None
     course_id = request.data.get('course_id') or None
-
-    num_questions = request.data.get(
-        'num_questions',
-        5
-    )
-
-    title = request.data.get(
-        'title',
-        'Generated Quiz'
-    )
-
-    question_mode = request.data.get(
-        'question_mode',
-        'mixed'
-    )
+    num_questions = request.data.get('num_questions', 5)
+    title = request.data.get('title', 'Generated Quiz')
+    question_mode = request.data.get('question_mode', 'mixed')
 
     if question_mode not in ['mcq', 'true_false', 'mixed']:
-        return build_response(
-            False,
-            'question_mode must be mcq, true_false, or mixed',
-            status_code=400
-        )
+        return build_response(False, 'question_mode must be mcq, true_false, or mixed', status_code=400)
 
     if not file_obj:
-        return build_response(
-            False,
-            'file is required',
-            status_code=400
-        )
+        return build_response(False, 'file is required', status_code=400)
 
     if lecture_id:
-        error = _validate_uuid(
-            lecture_id,
-            'lecture_id'
-        )
-
+        error = _validate_uuid(lecture_id, 'lecture_id')
         if error:
             return error
 
     if course_id:
-        error = _validate_uuid(
-            course_id,
-            'course_id'
-        )
-
+        error = _validate_uuid(course_id, 'course_id')
         if error:
             return error
 
     file_error = _validate_file(file_obj)
-
     if file_error:
         return file_error
 
-    num_questions, error_response = _validate_num_questions(
-        num_questions
-    )
-
+    num_questions, error_response = _validate_num_questions(num_questions)
     if error_response:
         return error_response
 
     try:
-        text = extract_text_from_file(
-            file_obj,
-            file_obj.name
-        )
-
+        text = extract_text_from_file(file_obj, file_obj.name)
     except Exception as e:
-        return build_response(
-            False,
-            f'File extraction failed: {str(e)}',
-            status_code=500
-        )
+        return build_response(False, f'File extraction failed: {str(e)}', status_code=500)
 
     return _create_pending_quiz_and_publish(
         request=request,
@@ -465,71 +312,35 @@ def generate_from_file_view(request):
 def generate_from_scope_view(request):
     lecture_id = request.data.get('lecture_id')
     course_id = request.data.get('course_id')
-
-    num_questions = request.data.get(
-        'num_questions',
-        5
-    )
-
-    title = request.data.get(
-        'title',
-        'Generated Quiz'
-    )
-
+    num_questions = request.data.get('num_questions', 5)
+    title = request.data.get('title', 'Generated Quiz')
     scope = request.data.get('scope')
-
-    question_mode = request.data.get(
-        'question_mode',
-        'mixed'
-    )
+    question_mode = request.data.get('question_mode', 'mixed')
 
     if question_mode not in ['mcq', 'true_false', 'mixed']:
-        return build_response(
-            False,
-            'question_mode must be mcq, true_false, or mixed',
-            status_code=400
-        )
+        return build_response(False, 'question_mode must be mcq, true_false, or mixed', status_code=400)
 
-    if not all([
-        lecture_id,
-        course_id,
-        scope
-    ]):
+    if not all([lecture_id, course_id, scope]):
         return build_response(
             False,
             'lecture_id, course_id, and scope are required fields',
             status_code=400
         )
 
-    error = _validate_uuid(
-        lecture_id,
-        'lecture_id'
-    )
-
+    error = _validate_uuid(lecture_id, 'lecture_id')
     if error:
         return error
 
-    error = _validate_uuid(
-        course_id,
-        'course_id'
-    )
-
+    error = _validate_uuid(course_id, 'course_id')
     if error:
         return error
 
-    num_questions, error_response = _validate_num_questions(
-        num_questions
-    )
-
+    num_questions, error_response = _validate_num_questions(num_questions)
     if error_response:
         return error_response
 
     try:
-        file_obj, filename = fetch_lecture_file(
-            request,
-            lecture_id
-        )
-
+        file_obj, filename = fetch_lecture_file(request, lecture_id)
     except Exception as e:
         return build_response(
             False,
@@ -546,12 +357,7 @@ def generate_from_scope_view(request):
 
     try:
         file_obj.seek(0)
-
-        text = extract_text_from_file(
-            file_obj,
-            filename
-        )
-
+        text = extract_text_from_file(file_obj, filename)
     except Exception as e:
         return build_response(
             False,
@@ -575,76 +381,37 @@ def generate_from_scope_view(request):
 
 @api_view(['GET', 'DELETE'])
 def quiz_detail_view(request, quiz_id):
-    error = _validate_uuid(
-        quiz_id,
-        'quiz_id'
-    )
-
+    error = _validate_uuid(quiz_id, 'quiz_id')
     if error:
         return error
 
-    quiz = get_object_or_404(
-        Quiz,
-        quiz_id=quiz_id
-    )
+    quiz = get_object_or_404(Quiz, quiz_id=quiz_id)
 
     if request.method == 'GET':
         serializer = QuizSerializer(quiz)
-
-        return build_response(
-            True,
-            "Quiz fetched successfully",
-            serializer.data,
-            status_code=200
-        )
+        return build_response(True, "Quiz fetched successfully", serializer.data, status_code=200)
 
     try:
-        mongo_uri = os.getenv(
-            'MONGO_URI',
-            'mongodb://localhost:27017'
-        )
-
-        mongo_db_name = os.getenv(
-            'MONGO_DB',
-            'quiz_results'
-        )
-
+        mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
+        mongo_db_name = os.getenv('MONGO_DB', 'quiz_results')
         client = MongoClient(mongo_uri)
-
         db = client[mongo_db_name]
-
-        db['llm_generation_logs'].delete_one({
-            "quiz_id": str(quiz_id)
-        })
-
+        db['llm_generation_logs'].delete_one({"quiz_id": str(quiz_id)})
         client.close()
-
     except Exception:
         pass
 
     quiz.delete()
-
-    return build_response(
-        True,
-        "Quiz deleted successfully",
-        status_code=204
-    )
+    return build_response(True, "Quiz deleted successfully", status_code=204)
 
 
 @api_view(['GET'])
 def quiz_status_view(request, quiz_id):
-    error = _validate_uuid(
-        quiz_id,
-        'quiz_id'
-    )
-
+    error = _validate_uuid(quiz_id, 'quiz_id')
     if error:
         return error
 
-    quiz = get_object_or_404(
-        Quiz,
-        quiz_id=quiz_id
-    )
+    quiz = get_object_or_404(Quiz, quiz_id=quiz_id)
 
     return build_response(
         True,
@@ -660,22 +427,12 @@ def quiz_status_view(request, quiz_id):
 
 @api_view(['GET'])
 def quiz_by_lecture_view(request, lecture_id):
-    error = _validate_uuid(
-        lecture_id,
-        'lecture_id'
-    )
-
+    error = _validate_uuid(lecture_id, 'lecture_id')
     if error:
         return error
 
-    quizzes = Quiz.objects.filter(
-        lecture_id=lecture_id
-    )
-
-    serializer = QuizSerializer(
-        quizzes,
-        many=True
-    )
+    quizzes = Quiz.objects.filter(lecture_id=lecture_id)
+    serializer = QuizSerializer(quizzes, many=True)
 
     return build_response(
         True,
@@ -687,80 +444,34 @@ def quiz_by_lecture_view(request, lecture_id):
 
 @api_view(['POST'])
 def quiz_submit_view(request, quiz_id):
-    error = _validate_uuid(
-        quiz_id,
-        'quiz_id'
-    )
-
+    error = _validate_uuid(quiz_id, 'quiz_id')
     if error:
         return error
 
-    quiz = get_object_or_404(
-        Quiz,
-        quiz_id=quiz_id
-    )
-
-    student_id = request.headers.get(
-        'X-Student-ID'
-    )
+    quiz = get_object_or_404(Quiz, quiz_id=quiz_id)
+    student_id = request.headers.get('X-Student-ID')
 
     if not student_id:
-        return build_response(
-            False,
-            'X-Student-ID header is missing',
-            status_code=400
-        )
+        return build_response(False, 'X-Student-ID header is missing', status_code=400)
 
-    answers_data = request.data.get(
-        'answers',
-        []
-    )
-
-    if not isinstance(
-        answers_data,
-        list
-    ):
-        return build_response(
-            False,
-            'answers must be a JSON array',
-            status_code=400
-        )
+    answers_data = request.data.get('answers', [])
+    if not isinstance(answers_data, list):
+        return build_response(False, 'answers must be a JSON array', status_code=400)
 
     if not answers_data:
-        return build_response(
-            False,
-            'answers list cannot be empty',
-            status_code=400
-        )
+        return build_response(False, 'answers list cannot be empty', status_code=400)
 
     for ans in answers_data:
-        if (
-            'question_id' not in ans
-            or
-            'selected_answer' not in ans
-        ):
-            return build_response(
-                False,
-                'Each answer must contain question_id and selected_answer',
-                status_code=400
-            )
+        if 'question_id' not in ans or 'selected_answer' not in ans:
+            return build_response(False, 'Each answer must contain question_id and selected_answer', status_code=400)
 
-        question_id_error = _validate_uuid(
-            ans.get('question_id'),
-            'question_id'
-        )
-
+        question_id_error = _validate_uuid(ans.get('question_id'), 'question_id')
         if question_id_error:
             return question_id_error
 
     total_questions = quiz.questions.count()
-
     if total_questions == 0:
-        return build_response(
-            False,
-            'This quiz has no valid questions to score.',
-            status_code=400
-        )
+        return build_response(False, 'This quiz has no valid questions to score.', status_code=400)
 
     score = 0
     results = []
@@ -774,31 +485,14 @@ def quiz_submit_view(request, quiz_id):
         )
 
         for ans_data in answers_data:
-            q_id = str(
-                ans_data.get('question_id')
-            ).strip()
+            q_id = str(ans_data.get('question_id')).strip()
+            selected_answer = str(ans_data.get('selected_answer', '')).strip()
 
-            selected_answer = str(
-                ans_data.get(
-                    'selected_answer',
-                    ''
-                )
-            ).strip()
-
-            question = quiz.questions.filter(
-                question_id=q_id
-            ).first()
-
+            question = quiz.questions.filter(question_id=q_id).first()
             if not question:
                 continue
 
-            is_correct = (
-                selected_answer.lower()
-                ==
-                str(
-                    question.correct_answer
-                ).strip().lower()
-            )
+            is_correct = selected_answer.lower() == str(question.correct_answer).strip().lower()
 
             if is_correct:
                 score += 1
@@ -811,9 +505,7 @@ def quiz_submit_view(request, quiz_id):
             )
 
             results.append({
-                "question_id": str(
-                    question.question_id
-                ),
+                "question_id": str(question.question_id),
                 "question_text": question.question_text,
                 "selected_answer": selected_answer,
                 "correct_answer": question.correct_answer,
@@ -821,10 +513,7 @@ def quiz_submit_view(request, quiz_id):
                 "explanation": question.explanation
             })
 
-        percentage = (
-            score / total_questions
-        ) * 100.0
-
+        percentage = (score / total_questions) * 100.0
         attempt.score = score
         attempt.save()
 
@@ -832,15 +521,10 @@ def quiz_submit_view(request, quiz_id):
         True,
         "Quiz submitted successfully",
         {
-            "attempt_id": str(
-                attempt.attempt_id
-            ),
+            "attempt_id": str(attempt.attempt_id),
             "score": score,
             "total": total_questions,
-            "percentage": round(
-                percentage,
-                2
-            ),
+            "percentage": round(percentage, 2),
             "results": results
         },
         status_code=201
