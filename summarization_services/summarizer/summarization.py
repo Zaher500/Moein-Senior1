@@ -1,18 +1,19 @@
 from huggingface_hub import InferenceClient
 import os
-
+# from dotenv import load_dotenv
 
 
 #  Hugging Face Client
 
 
-HF_API_KEY = os.getenv("HF_API_KEY")
+HF_API_KEY = "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"
+
 
 if not HF_API_KEY:
     raise RuntimeError("HF_API_KEY is not set in environment variables")
 
 client = InferenceClient(
-    model="Qwen/Qwen3-30B-A3B-Instruct-2507",
+    model="openai/gpt-oss-20b",
     token=HF_API_KEY
 )
 

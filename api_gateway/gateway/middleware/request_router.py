@@ -211,20 +211,33 @@ class RequestRouterMiddleware:
                     verify=True
                 )
 
-            print(f"[Gateway] Upstream status: {response.status_code}")
-            print(f"[Gateway] Upstream content-type: {response.headers.get('Content-Type')}")
-            print(f"[Gateway] Upstream response preview: {response.text[:500]}")
-            print("========== GATEWAY REQUEST END ==========\n")
+            # return HttpResponse(
+            #     content=response.content,
+            #     status=response.status_code,
+            #     content_type=response.headers.get('Content-Type', 'application/json')
+            # )
+            
 
-            return HttpResponse(
+
+            gateway_response = HttpResponse(
                 content=response.content,
                 status=response.status_code,
-                content_type=response.headers.get('Content-Type', 'application/json')
+                content_type=response.headers.get(
+                    'Content-Type',
+                    'application/json'
+                )
             )
 
-        except requests.exceptions.ConnectionError as e:
-            print(f"[Gateway] ConnectionError: {e}")
-            print("========== GATEWAY REQUEST END ==========\n")
+            content_disposition = response.headers.get(
+                'Content-Disposition'
+            )
+
+            if content_disposition:
+                gateway_response['Content-Disposition'] = content_disposition
+
+            return gateway_response
+
+        except requests.exceptions.ConnectionError:
             return JsonResponse({'error': 'Cannot connect to service'}, status=503)
 
         except requests.exceptions.SSLError as e:
