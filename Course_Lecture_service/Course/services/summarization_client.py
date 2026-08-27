@@ -2,7 +2,18 @@ import requests
 from django.conf import settings
 
 
-def send_for_summarization(lecture_id: str, text: str, request) -> None:
+def send_for_summarization(
+    lecture_id: str,
+    text: str,
+    student_id: str,
+    user_id: str,
+    username: str = None
+) -> None:
+    """
+    Send lecture text to summarization service
+    with user identity forwarded from API Gateway.
+    """
+
     url = f"{settings.SERVICES['summarizer']}/api/lecture-text/"
 
     payload = {
@@ -11,24 +22,23 @@ def send_for_summarization(lecture_id: str, text: str, request) -> None:
     }
 
     headers = {
-    "Authorization": request.headers.get("Authorization"),
-    "X-Student-ID": request.headers.get("X-Student-ID"),
-    "X-User-ID": request.headers.get("X-User-ID"),
-    "Content-Type": "application/json",
-}
+        'X-Student-ID': str(student_id),
+        'X-User-ID': str(user_id),
+    }
 
-    print("OUTGOING HEADERS:", headers)
+    if username:
+        headers['X-Username'] = str(username)
 
     response = requests.post(
         url,
         json=payload,
-        headers=headers,   
-        timeout=settings.SUMMARIZATION_SERVICE["timeout"]
+        headers=headers,
+        timeout=settings.SUMMARIZATION_SERVICE['timeout']
     )
 
-    print("STATUS:", response.status_code, response.text)
     response.raise_for_status()
-    
+
+
 
 def is_summary_ready(lecture_id: str) -> bool:
     """

@@ -339,13 +339,27 @@ def upload_lecture(request, course_id):
             except Exception as e:
                 print(f"ChatBot ingestion failed: {e}")
 
+        # def send_to_summarizer():
+        #     try:
+        #         send_for_summarization(lecture.lecture_id, extracted_text)
+        #     except Exception as e:
+        #         print(f"Summarization request failed: {e}")
+
         def send_to_summarizer():
-            try:
-                print("AUTH:", request.headers.get("Authorization"))
-                print("X-STUDENT-ID:", request.headers.get("X-Student-ID"))
-                send_for_summarization(lecture.lecture_id, extracted_text, request=request)
-            except Exception as e:
-                print(f"Summarization request failed: {e}")
+         try:
+            user_id = request.META.get("HTTP_X_USER_ID")
+            username = request.META.get("HTTP_X_USERNAME")
+
+            send_for_summarization(
+                lecture_id=lecture.lecture_id,
+                text=extracted_text,
+                student_id=student_id,
+                user_id=user_id,
+                username=username,
+                )
+
+         except Exception as e:
+            print(f"Summarization request failed: {e}")
 
         chatbot_thread = threading.Thread(target=send_to_chatbot, daemon=True)
         summarizer_thread = threading.Thread(target=send_to_summarizer, daemon=True)
@@ -543,10 +557,11 @@ def get_lecture(request, lecture_id):
             if is_summary_ready(str(lecture.lecture_id)):
                 lecture.summary_status = 'READY'
                 lecture.save(update_fields=['summary_status'])
-        except Exception:
+        except Exception as e:
+            print("Summary readiness check failed:", e)
             # Do NOT fail the request
             # Keep PROCESSING and try again next poll
-            pass
+            
     
     # 3. Serialize lecture data
     lecture_data = LectureSerializer(lecture).data

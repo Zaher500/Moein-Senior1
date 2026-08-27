@@ -1,17 +1,28 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SummaryTextSerializer
-from .rabbitmq import send_to_queue
-from .models import Summary
-from .serializers import LectureTextSerializer
-from rest_framework.decorators import api_view
-from .db.mongo import get_summary_by_lecture_id, is_summary_ready
+from django.http import HttpResponse
+from .export_utils import generate_pdf, generate_word
 
+from .rabbitmq import send_to_queue
+from .serializers import LectureTextSerializer
+from .db.mongo import get_summary_by_lecture_id, is_summary_ready
+from .auth_helpers import get_user_from_headers
 
 class LectureTextAPIView(APIView):
     def post(self, request):
         print("Summarization request received")
+
+        user_data = get_user_from_headers(request)
+        user_id = user_data.get("user_id")
+        student_id = user_data.get("student_id")
+
+        if not user_id:
+            return Response(
+                {"error": "Missing user ID"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         serializer = LectureTextSerializer(data=request.data)
 
         if not serializer.is_valid():
@@ -23,11 +34,20 @@ class LectureTextAPIView(APIView):
 
         text = text.replace("\x00", "").strip()
 
-        send_to_queue({"lecture_id": lecture_id, "text": text})
+        send_to_queue({
+            "lecture_id": lecture_id,
+            "text": text,
+            "user_id": user_id,
+            "student_id": student_id
+        })
 
         return Response(
-            {"message": "Text received and sent to queue"},
-            status=status.HTTP_202_ACCEPTED,
+            {
+                "message": "Text received and sent to queue",
+                "lecture_id": lecture_id,
+                "user_id": user_id
+            },
+            status=status.HTTP_202_ACCEPTED
         )
 
 
@@ -54,3 +74,161 @@ class SummaryRetrieveAPIView(APIView):
             {"lecture_id": lecture_id, "summary": summary_doc.get("summary_text")},
             status=status.HTTP_200_OK,
         )
+
+class SummaryPDFExportAPIView(APIView):
+
+    def get(self, request, lecture_id):
+
+        summary_doc = get_summary_by_lecture_id(lecture_id)
+
+        if not summary_doc:
+            return Response(
+                {
+                    "error": "Summary not ready",
+                    "lecture_id": lecture_id
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        summary_text = summary_doc.get("summary_text", "")
+
+        if not summary_text:
+            return Response(
+                {
+                    "error": "Summary is empty"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        pdf_buffer = generate_pdf(summary_text)
+
+        response = HttpResponse(
+            pdf_buffer.getvalue(),
+            content_type="application/pdf"
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="summary_{lecture_id}.pdf"'
+        )
+
+        return response
+
+
+class SummaryWordExportAPIView(APIView):
+
+    def get(self, request, lecture_id):
+
+        summary_doc = get_summary_by_lecture_id(lecture_id)
+
+        if not summary_doc:
+            return Response(
+                {
+                    "error": "Summary not ready",
+                    "lecture_id": lecture_id
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        summary_text = summary_doc.get("summary_text", "")
+
+        if not summary_text:
+            return Response(
+                {
+                    "error": "Summary is empty"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        word_buffer = generate_word(summary_text)
+
+        response = HttpResponse(
+            word_buffer.getvalue(),
+            content_type=(
+                "application/vnd.openxmlformats-officedocument."
+                "wordprocessingml.document"
+            )
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="summary_{lecture_id}.docx"'
+        )
+
+        return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
