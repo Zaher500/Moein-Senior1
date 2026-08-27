@@ -49,6 +49,7 @@ class QuizSerializer(serializers.ModelSerializer):
             'status',
             'error',
             'num_questions',
+            'difficulty',
             'created_at',
             'updated_at',
             'questions',
